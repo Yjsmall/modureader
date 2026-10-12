@@ -26,9 +26,9 @@ void main() {
     expect(
         config.items.where((i) => i.isCustom).every((i) => !i.enabled), true);
     expect(config.availableItems().map((i) => i.id),
-        ['query', 'narrate', 'note', 'copy', 'share']);
-    expect(config.items.takeWhile((i) => i.enabled), hasLength(5));
-    expect(config.items.skip(5).every((i) => !i.enabled), true);
+        ['query', 'sentenceContext', 'narrate', 'note', 'copy', 'share']);
+    expect(config.items.takeWhile((i) => i.enabled), hasLength(6));
+    expect(config.items.skip(6).every((i) => !i.enabled), true);
     expect(config.availableItems(footnote: true).any((i) => i.action == 'note'),
         false);
     expect(config.availableItems(aiEnabled: false).any((i) => i.isAi), false);
@@ -55,6 +55,41 @@ void main() {
     expect(config.availableItems().first.id, own.id);
     expect(config.availableItems().any((i) => i.id == 'copy'), false);
   });
+
+  test(
+    'saved toolbar settings gain sentence collection once and retain edits',
+    () {
+      final raw = jsonDecode(const SelectionToolbarConfig().encode()) as Map;
+      final items = raw['items'] as List;
+      items.removeWhere((item) => item['id'] == 'sentenceContext');
+      final copy = items.singleWhere((item) => item['id'] == 'copy') as Map;
+      copy['enabled'] = false;
+      copy['name'] = '复制原文';
+      final migrated = SelectionToolbarConfig.decode(jsonEncode(raw));
+      expect(
+        migrated.availableItems().map((item) => item.id),
+        contains('sentenceContext'),
+      );
+      expect(
+        migrated.items.singleWhere((item) => item.id == 'copy').name,
+        '复制原文',
+      );
+      expect(
+        migrated.items.singleWhere((item) => item.id == 'copy').enabled,
+        false,
+      );
+      final disabled = migrated.copyWith(
+        items: [
+          for (final item in migrated.items)
+            item.id == 'sentenceContext' ? item.copyWith(enabled: false) : item,
+        ],
+      );
+      expect(
+        SelectionToolbarConfig.decode(disabled.encode()).encode(),
+        disabled.encode(),
+      );
+    },
+  );
 
   test('placeholder expansion quotes selected text once without recursion', () {
     const command = SelectionToolbarItem('custom-test', 'aiCommand',

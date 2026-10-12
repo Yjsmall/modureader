@@ -14,7 +14,22 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // Current app database version
-const int currentDbVersion = 8;
+const int currentDbVersion = 9;
+
+const createSentenceContextSQL = '''
+CREATE TABLE tb_sentence_contexts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  book_id INTEGER NOT NULL,
+  book_title TEXT NOT NULL,
+  author TEXT NOT NULL,
+  word TEXT NOT NULL,
+  sentence TEXT NOT NULL,
+  cfi TEXT NOT NULL,
+  chapter TEXT NOT NULL,
+  create_time TEXT NOT NULL,
+  UNIQUE(book_id, chapter, sentence)
+)
+''';
 
 const createBookSQL = '''
 CREATE TABLE tb_books (
@@ -478,6 +493,7 @@ class DBHelper {
     }
 
     if (oldVersion < 8) await RowSyncStore.install(db);
+    if (oldVersion < 9) await db.execute(createSentenceContextSQL);
 
     if (oldVersion != 0 && Prefs().webdavStatus) {
       updatedDB = true;

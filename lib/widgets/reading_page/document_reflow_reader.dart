@@ -1,4 +1,5 @@
 import 'package:anx_reader/utils/app_motion.dart';
+import 'package:anx_reader/service/book_player/sentence_context.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -16,8 +17,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'document_text_style_dialog.dart';
 
-typedef ReflowSelection = Future<void> Function(DocumentReflowAnchor anchor,
-    String text, String contextText, Rect globalRect, List<int> annotationIds);
+typedef ReflowSelection = Future<void> Function(
+    DocumentReflowAnchor anchor,
+    String text,
+    String contextText,
+    Rect globalRect,
+    List<int> annotationIds,
+    String sentenceText);
 
 /// A reading surface in the reader's body, not a dialog or another book.
 /// The source WebView stays mounted underneath to retain original-page state.
@@ -599,8 +605,13 @@ class DocumentReflowReaderState extends State<DocumentReflowReader> {
         final contextText = page.text.substring(
             (selection.start - 800).clamp(0, page.text.length),
             (selection.end + 800).clamp(0, page.text.length));
-        await widget.onSelection(anchor, selection.textInside(page.text),
-            contextText, Rect.fromPoints(primary, secondary).inflate(4), ids);
+        await widget.onSelection(
+            anchor,
+            selection.textInside(page.text),
+            contextText,
+            Rect.fromPoints(primary, secondary).inflate(4),
+            ids,
+            sentenceAt(page.text, selection.start, selection.end));
       });
     }
     WidgetsBinding.instance.scheduleFrame();

@@ -106,7 +106,8 @@ void main() {
           loadNotes: () async => notes,
           initialStyle: const DocumentTextStyle(),
           saveStyle: (_) async {},
-          onSelection: selection ?? (_, text, context, rect, ids) async {},
+          onSelection:
+              selection ?? (_, text, context, rect, ids, sentence) async {},
         ))));
     if (settle) await tester.pumpAndSettle();
   }
@@ -135,7 +136,7 @@ void main() {
     await open(tester,
         ocr: true,
         recognize: () async => 'Hello reader. Another sentence.',
-        selection: (_, value, context, rect, ids) async {
+        selection: (_, value, context, rect, ids, sentence) async {
           selected.add(value);
           expect(rect.isFinite, true);
         });
@@ -165,7 +166,10 @@ void main() {
     await open(tester,
         ocr: true,
         recognize: () async => '中国文化源远流长。\n\n第二段。',
-        selection: (_, value, context, rect, ids) async => selected.add(value));
+        selection: (_, value, context, rect, ids, sentence) async {
+          selected.add(value);
+          expect(sentence, '中国文化源远流长。');
+        });
     await tester.longPressAt(textPoint(tester, 0));
     await tester.pumpAndSettle();
     final editable = tester.state<EditableTextState>(find.byType(EditableText));
@@ -197,7 +201,8 @@ void main() {
     await open(tester,
         ocr: true,
         recognize: () async => '中国文化源远流长。',
-        selection: (_, value, context, rect, ids) async => selected.add(value));
+        selection: (_, value, context, rect, ids, sentence) async =>
+            selected.add(value));
     final point = textPoint(tester, 0);
     await tester.tapAt(point, kind: PointerDeviceKind.mouse);
     await tester.pump(const Duration(milliseconds: 50));
@@ -214,7 +219,8 @@ void main() {
     var selections = 0;
     await open(tester,
         extract: (_) async => '中国文化源远流长。',
-        selection: (_, value, context, rect, ids) async => selections++);
+        selection: (_, value, context, rect, ids, sentence) async =>
+            selections++);
     await tester.longPressAt(textPoint(tester, 0));
     await tester.pump(const Duration(milliseconds: 90));
     await key.currentState!.turnOriginalPage(1);
@@ -232,7 +238,8 @@ void main() {
     await open(tester,
         ocr: true,
         recognize: () async => '中国文化源远流长。',
-        selection: (_, value, context, rect, ids) async => selected.add(value));
+        selection: (_, value, context, rect, ids, sentence) async =>
+            selected.add(value));
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await mouse.down(textPoint(tester, 0));
     await tester.pump(kLongPressTimeout);
@@ -500,7 +507,7 @@ void main() {
     List<int>? ids;
     await open(tester,
         extract: (_) async => page.rawText,
-        selection: (a, t, c, r, i) async {
+        selection: (a, t, c, r, i, sentence) async {
           selected = a;
           selectedText = t;
           ids = i;
@@ -568,7 +575,7 @@ void main() {
     var selections = 0, cleared = 0;
     await open(tester,
         extract: (_) async => 'Hello reader. Select and annotate this page.',
-        selection: (a, text, context, rect, ids) async {
+        selection: (a, text, context, rect, ids, sentence) async {
           selections++;
           expect(text.isNotEmpty, true);
         },

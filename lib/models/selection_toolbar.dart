@@ -131,6 +131,7 @@ class SelectionToolbarConfig {
 
   static const defaultItems = [
     SelectionToolbarItem('query', 'query'),
+    SelectionToolbarItem('sentenceContext', 'sentenceContext'),
     SelectionToolbarItem('narrate', 'narrate'),
     SelectionToolbarItem('note', 'note'),
     SelectionToolbarItem('copy', 'copy'),
@@ -189,6 +190,7 @@ class SelectionToolbarConfig {
   static const initialItems = [...defaultItems, ...templateItems];
   static const iconIds = {
     'query',
+    'sentenceContext',
     'copy',
     'search',
     'translate',
@@ -338,6 +340,10 @@ class SelectionToolbarConfig {
     }
     final items =
         (raw['items'] as List).map(SelectionToolbarItem.fromJson).toList();
+    if (!items.any((item) => item.id == 'sentenceContext')) {
+      items.insert(items.indexWhere((item) => item.id == 'query') + 1,
+          defaultItems.singleWhere((item) => item.id == 'sentenceContext'));
+    }
     if (raw['queryRevision'] != 1 && !items.any((i) => i.id == 'query')) {
       // One-time migration: retain old actions and their edited prompts, but
       // start the unified lookup as the visible entry requested for this UI.

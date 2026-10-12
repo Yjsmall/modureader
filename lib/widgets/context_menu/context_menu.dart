@@ -24,6 +24,7 @@ Future<void> showContextMenu(
     bool footnote,
     Axis axis,
     {String? contextText,
+    String? sentenceText,
     List<int> annotationIds = const []}) async {
   final playerKey = epubPlayerKey.currentState;
   if (playerKey == null) return;
@@ -161,6 +162,7 @@ Future<void> showContextMenu(
       bookId: playerKey.book.id,
       footnote: footnote,
       contextText: contextText,
+      sentenceText: sentenceText,
       decoration: decoration,
       onClose: onClose,
       menuConstraints: menuConstraints,
@@ -266,6 +268,7 @@ class _ContextMenuOverlay extends StatefulWidget {
     required this.bookId,
     required this.footnote,
     this.contextText,
+    this.sentenceText,
     required this.decoration,
     required this.onClose,
     required this.menuConstraints,
@@ -288,6 +291,7 @@ class _ContextMenuOverlay extends StatefulWidget {
   final int bookId;
   final bool footnote;
   final String? contextText;
+  final String? sentenceText;
   final BoxDecoration decoration;
   final VoidCallback onClose;
   final BoxConstraints menuConstraints;
@@ -547,6 +551,7 @@ class _ContextMenuOverlayState extends State<_ContextMenuOverlay>
                                     annoCfi: widget.annoCfi,
                                     annoContent: widget.annoContent,
                                     contextText: widget.contextText,
+                                    sentenceText: widget.sentenceText,
                                     id: _noteId,
                                     bookId: widget.bookId,
                                     annotationIds: widget.annotationIds,

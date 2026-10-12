@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 const selectionToolbarIcons = <String, IconData>{
   'query': Icons.manage_search,
+  'sentenceContext': Icons.format_quote_outlined,
   'copy': Icons.content_copy,
   'search': Icons.travel_explore,
   'translate': Icons.translate,
@@ -36,6 +37,7 @@ String selectionToolbarLabel(BuildContext context, SelectionToolbarItem item) {
   final l10n = L10n.of(context);
   return switch (item.action) {
     'query' => ModuStrings.text(context, '综合', 'Look up'),
+    'sentenceContext' => ModuStrings.text(context, '语境', 'Context'),
     'copy' => l10n.contextMenuCopy,
     'search' => l10n.contextMenuSearch,
     'translate' => l10n.contextMenuTranslate,

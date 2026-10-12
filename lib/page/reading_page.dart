@@ -152,7 +152,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
       selectionInvalidated: player.reflowSelectionInvalidated,
       onPageChanged: player.goToDocumentPage,
       loadNotes: () => bookNoteDao.selectBookNotesByBookId(player.book.id),
-      onSelection: (anchor, text, contextText, rect, ids) async {
+      onSelection: (anchor, text, contextText, rect, ids, sentenceText) async {
         if (!mounted || !isReflowReading) return;
         final box = epubPlayerKey.currentContext?.findRenderObject();
         if (box is! RenderBox || !box.hasSize || box.size.isEmpty) return;
@@ -169,6 +169,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
             false,
             Axis.horizontal,
             contextText: contextText,
+            sentenceText: sentenceText,
             annotationIds: ids);
       },
     );

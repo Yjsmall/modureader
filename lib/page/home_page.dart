@@ -15,6 +15,7 @@ import 'package:anx_reader/page/home_page/remote_library_page.dart';
 import 'package:anx_reader/service/initialization_check.dart';
 import 'package:anx_reader/page/home_page/bookshelf_page.dart';
 import 'package:anx_reader/page/home_page/notes_page.dart';
+import 'package:anx_reader/page/home_page/sentence_contexts_page.dart';
 import 'package:anx_reader/page/home_page/settings_page.dart';
 import 'package:anx_reader/page/home_page/statistics_page.dart';
 import 'package:anx_reader/service/receive_file/receive_share.dart';
@@ -182,6 +183,11 @@ class _HomePageState extends ConsumerState<HomePage> {
           'identifier': 'notes'
         },
       {
+        'icon': Icons.format_quote_outlined,
+        'label': ModuStrings.text(context, '句境', 'Sentences'),
+        'identifier': 'sentenceContexts'
+      },
+      {
         'icon': EvaIcons.settings_2,
         'label': L10n.of(context).navBarSettings,
         'identifier': 'settings'
@@ -208,6 +214,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         if (Prefs().bottomNavigatorShowAI && EnvVar.enableAIFeature)
           AiChatStream(),
         if (Prefs().bottomNavigatorShowNote) NotesPage(controller: controller),
+        SentenceContextsPage(controller: controller),
         SettingsPage(controller: controller),
       ];
       return page[index];
@@ -289,7 +296,9 @@ class _HomePageState extends ConsumerState<HomePage> {
             extendBody: true,
             body: BottomBar(
               duration: AppMotion.duration(const Duration(milliseconds: 120)),
-              width: 330,
+              width: navBarItems.length > 6
+                  ? (constraints.maxWidth - 32).clamp(0, 390).toDouble()
+                  : 330,
               offset: HomeNavigationMetrics.barOffset,
               body: (_, controller) => HomeNavigationBody(
                 hasBottomBar: !keyboardOpen,

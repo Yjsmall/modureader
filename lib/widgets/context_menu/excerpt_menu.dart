@@ -1,6 +1,8 @@
 import 'package:anx_reader/utils/app_motion.dart';
 import 'package:anx_reader/config/shared_preference_provider.dart';
 import 'package:anx_reader/dao/book_note.dart';
+import 'package:anx_reader/dao/sentence_context.dart';
+import 'package:anx_reader/models/sentence_context.dart';
 import 'package:anx_reader/l10n/generated/L10n.dart';
 import 'package:anx_reader/l10n/modu_strings.dart';
 import 'package:anx_reader/main.dart';
@@ -28,6 +30,7 @@ class ExcerptMenu extends StatefulWidget {
   final String annoCfi;
   final String annoContent;
   final String? contextText;
+  final String? sentenceText;
   final int? id;
   final int? bookId;
   final List<int> annotationIds;
@@ -50,6 +53,7 @@ class ExcerptMenu extends StatefulWidget {
     required this.annoCfi,
     required this.annoContent,
     this.contextText,
+    this.sentenceText,
     this.id,
     this.bookId,
     this.annotationIds = const [],
@@ -374,6 +378,52 @@ class ExcerptMenuState extends State<ExcerptMenu> {
     final reader = readingPageKey.currentState;
     final text = widget.annoContent;
     switch (item.action) {
+      case 'sentenceContext':
+        final player = epubPlayerKey.currentState;
+        final sentence = widget.sentenceText?.trim() ?? '';
+        if (player == null || sentence.isEmpty) {
+          AnxToast.show(
+            ModuStrings.text(
+              context,
+              '未能获取所在句子',
+              'Could not retrieve the sentence',
+            ),
+          );
+          return;
+        }
+        final savedMessage = ModuStrings.text(
+          context,
+          '已收集到句境',
+          'Sentence saved',
+        );
+        final duplicateMessage = ModuStrings.text(
+          context,
+          '这个句子已收集',
+          'Sentence already saved',
+        );
+        final errorMessage = ModuStrings.text(
+          context,
+          '收集失败，请重试',
+          'Could not save. Please retry.',
+        );
+        final entry = SentenceContext(
+          bookId: player.book.id,
+          bookTitle: player.book.title,
+          author: player.book.author,
+          word: text.trim(),
+          sentence: sentence,
+          cfi: widget.annoCfi,
+          chapter: player.selectionChapterTitle,
+          createdAt: DateTime.now(),
+        );
+        try {
+          final added = await sentenceContextDao.collect(entry);
+          AnxToast.show(added ? savedMessage : duplicateMessage);
+          if (mounted) widget.onClose();
+        } catch (_) {
+          AnxToast.show(errorMessage);
+        }
+        break;
       case 'query':
         final sourceContext = widget.contextText;
         widget.onClose();

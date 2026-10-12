@@ -4,6 +4,8 @@ import 'package:anx_reader/config/shared_preference_provider.dart';
 import 'package:anx_reader/dao/database.dart';
 import 'package:anx_reader/dao/book.dart';
 import 'package:anx_reader/dao/reading_time.dart';
+import 'package:anx_reader/dao/sentence_context.dart';
+import 'package:anx_reader/models/sentence_context.dart';
 import 'package:anx_reader/service/sync/row_sync_store.dart';
 import 'package:anx_reader/service/sync/row_sync_engine.dart';
 import 'package:anx_reader/service/sync/row_sync_record.dart';
@@ -74,6 +76,7 @@ void main() {
     expect(handles.every((handle) => identical(handle, db)), isTrue);
     expect(await db.getVersion(), currentDbVersion);
     expect(await db.query('tb_notes'), isEmpty);
+    expect(await db.query('tb_sentence_contexts'), isEmpty);
     expect(await db.query('tb_groups'), hasLength(1));
     expect(await db.query(syncRecordsTable), isNotEmpty);
     expect(
@@ -173,7 +176,7 @@ void main() {
       await db.execute(sql);
     }
     await db.execute('ALTER TABLE tb_books ADD COLUMN rating REAL');
-    if (version == 7) {
+    if (version >= 7) {
       await db.execute('ALTER TABLE tb_books ADD COLUMN group_id INTEGER');
       await db.execute('ALTER TABLE tb_books ADD COLUMN file_md5 TEXT');
       await db.execute('ALTER TABLE tb_notes ADD COLUMN reader_note TEXT');
@@ -201,20 +204,22 @@ void main() {
       'create_time': '2026-09-01T00:00:00',
       'update_time': '2026-09-01T00:00:00'
     });
+    if (version >= 8) await RowSyncStore.install(db);
     await db.setVersion(version);
     await db.close();
   }
 
-  for (final version in [3, 7]) {
+  for (final version in [3, 7, 8]) {
     test(
         'version $version upgrade preserves books and notes without reentrant DAO opens',
         () async {
       await legacy(version);
       final db = await DBHelper().initDB();
-      expect(await db.getVersion(), 8);
+      expect(await db.getVersion(), currentDbVersion);
       expect((await db.query('tb_books')).single['last_read_position'],
           'chapter2');
       expect((await db.query('tb_notes')).single['content'], 'Keep this note');
+      expect(await db.query('tb_sentence_contexts'), isEmpty);
       expect(
           (await db
               .query(syncRecordsTable, where: 'kind = ?', whereArgs: ['note'])),
@@ -223,6 +228,36 @@ void main() {
       expect(db.isOpen, isTrue);
     });
   }
+
+  test(
+      'collected sentences persist, deduplicate per document, and survive shelf deletion',
+      () async {
+    final db = await DBHelper().database;
+    await db.insert('tb_books', bookRow(1));
+    SentenceContext entry(int bookId, String word) => SentenceContext(
+          bookId: bookId,
+          bookTitle: 'Document $bookId',
+          author: 'Author',
+          word: word,
+          sentence: 'This word belongs here.',
+          cfi: 'chapter1:$word',
+          chapter: 'Chapter 1',
+          createdAt: DateTime(2026, 10, 12),
+        );
+    expect(await sentenceContextDao.collect(entry(1, 'word')), true);
+    expect(await sentenceContextDao.collect(entry(1, 'here')), false);
+    expect(await sentenceContextDao.collect(entry(2, 'word')), true);
+    expect((await sentenceContextDao.documents()).map((d) => d.count), [1, 1]);
+    await bookDao.setDeleted(1, true);
+    await DBHelper.close();
+    final sentences = await sentenceContextDao.sentences(1);
+    expect(sentences.single.sentence, 'This word belongs here.');
+    expect(sentences.single.word, 'word');
+    expect(sentences.single.bookTitle, 'Document 1');
+    await sentenceContextDao.remove(sentences.single.id!);
+    expect(await sentenceContextDao.sentences(1), isEmpty);
+    expect((await sentenceContextDao.documents()).single.bookId, 2);
+  });
 
   test(
       'failed opening preserves the original file and permits an explicit retry',
@@ -234,6 +269,6 @@ void main() {
     expect(await file.readAsString(), 'intentionally invalid test database');
     await file.rename('${file.path}.test-backup');
     final db = await DBHelper().initDB();
-    expect(await db.getVersion(), 8);
+    expect(await db.getVersion(), currentDbVersion);
   });
 }

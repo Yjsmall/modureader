@@ -2,6 +2,7 @@ console.log('book.js')
 console.log('AnxUA', navigator.userAgent)
 
 import './view.js'
+import { rangeSentence } from './sentence-context.js'
 import { applyReaderMotion, reducedReaderMotionCSS } from './reader-motion.js'
 import { detectDocumentReadingMode, resolveDocumentReadingMode } from './document-reading-mode.js'
 import { FootnoteHandler } from './footnotes.js'
@@ -175,6 +176,7 @@ const handleSelection = (view, doc, index) => {
     pos: position,
     text,
     contextText,
+    sentenceText: rangeSentence(range),
     annotationIds: view.getSelectionAnnotationIds?.(cfi) ?? [],
   });
 };
@@ -1189,7 +1191,7 @@ class Reader {
       const pos = getPosition(e.detail.range)
       if (window.getSelection()?.toString()) return
       const contextText = buildRangeContextText(e.detail.range)
-      onAnnotationClick({ annotation, pos, contextText })
+      onAnnotationClick({ annotation, pos, contextText, sentenceText: rangeSentence(e.detail.range) })
     })
     view.addEventListener('external-link', e => {
       e.preventDefault()
@@ -1436,6 +1438,7 @@ class Reader {
               await callFlutter('onAnnotationClick', {
                 annotation, quickMark: true, pos: getPosition(range),
                 contextText: buildRangeContextText(range),
+                sentenceText: rangeSentence(range),
               });
           });
           this.quickMarkQueue = commit.catch(() => {});

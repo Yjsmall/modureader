@@ -133,8 +133,8 @@ void main() {
     await tester.pump();
     await gesture.up();
     await tester.pumpAndSettle();
-    expect(Prefs().selectionToolbar.items.take(4).map((i) => i.id),
-        ['query', 'note', 'narrate', 'copy']);
+    expect(Prefs().selectionToolbar.items.take(5).map((i) => i.id),
+        ['query', 'sentenceContext', 'note', 'narrate', 'copy']);
     expect(Prefs().selectionToolbar.annotations.first.id, 'delete');
     await reveal(tester, key('toolbar-item-delete'));
     final annotations =
@@ -161,8 +161,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await gesture.up();
     await tester.pumpAndSettle();
-    expect(Prefs().selectionToolbar.items.take(4).map((i) => i.id),
-        ['query', 'note', 'narrate', 'copy']);
+    expect(Prefs().selectionToolbar.items.take(5).map((i) => i.id),
+        ['query', 'sentenceContext', 'note', 'narrate', 'copy']);
     expect(Prefs().selectionToolbar.items.first.enabled, true);
     expect(tester.takeException(), isNull);
   });
@@ -460,7 +460,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(key('selection-toolbar-more'));
     await tester.pumpAndSettle();
-    final target = find.text('AI');
+    final target = find.text('搜索');
     expect(
         tester
             .getRect(key('annotation-controls'))
@@ -468,8 +468,8 @@ void main() {
         isTrue);
     await tester.tap(target, warnIfMissed: false);
     await tester.pumpAndSettle();
-    expect(chosen, ['ai']);
-    expect(find.text('AI'), findsNothing);
+    expect(chosen, ['search']);
+    expect(find.text('搜索'), findsNothing);
 
     // An outside tap must dismiss without applying the annotation below it.
     await tester.tap(key('selection-toolbar-more'));
@@ -477,8 +477,8 @@ void main() {
     await tester.tapAt(
         tester.getTopLeft(key('annotation-controls')) + const Offset(8, 130));
     await tester.pumpAndSettle();
-    expect(chosen, ['ai']);
-    expect(find.text('AI'), findsNothing);
+    expect(chosen, ['search']);
+    expect(find.text('搜索'), findsNothing);
 
     // Android Back consumes the menu's local history, not the book's route.
     await tester.tap(key('selection-toolbar-more'));
@@ -487,7 +487,7 @@ void main() {
     expect(navigator.canPop(), true);
     await navigator.maybePop();
     await tester.pumpAndSettle();
-    expect(find.text('AI'), findsNothing);
+    expect(find.text('搜索'), findsNothing);
     expect(key('selection-toolbar-more'), findsOneWidget);
     expect(navigator.canPop(), false);
 
@@ -498,7 +498,7 @@ void main() {
     entry.dispose();
     removed = true;
     await tester.pumpAndSettle();
-    expect(find.text('AI'), findsNothing);
+    expect(find.text('搜索'), findsNothing);
     expect(navigator.canPop(), false);
     expect(tester.takeException(), isNull);
   });

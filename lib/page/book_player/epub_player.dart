@@ -1688,6 +1688,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer> {
             footnote,
             writingMode.isVertical ? Axis.vertical : Axis.horizontal,
             contextText: _lastSelectionContextText,
+            sentenceText: location['sentenceText']?.toString(),
             annotationIds: footnote
                 ? const []
                 : (location['annotationIds'] as List? ?? const [])
@@ -1757,6 +1758,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer> {
             false,
             writingMode.isVertical ? Axis.vertical : Axis.horizontal,
             contextText: _lastSelectionContextText,
+            sentenceText: annotation['sentenceText']?.toString(),
           );
         });
     controller.addJavaScriptHandler(
