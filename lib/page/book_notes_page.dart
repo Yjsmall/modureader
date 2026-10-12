@@ -41,7 +41,7 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
       fontFamily: 'SourceHanSerif',
     );
     return FilledContainer(
-      padding: const EdgeInsets.all(10.0),
+      padding: const EdgeInsets.all(20.0),
       child: LayoutBuilder(builder: (context, constraints) {
         if (constraints.maxWidth > 500) {
           return Row(
@@ -416,14 +416,13 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
               title: Text(widget.book.title),
             )
           : null,
-      extendBodyBehindAppBar: true,
       body: SafeArea(
         bottom: false,
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
             bookInfo(context, widget.book, widget.numberOfNotes),
-            const SizedBox(height: 170),
+            const SizedBox(height: 24),
             BookNotesList(
                 book: widget.book,
                 reading: false,

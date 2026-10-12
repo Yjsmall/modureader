@@ -8,8 +8,9 @@ Widget highlightDigit(BuildContext context, String str, TextStyle textStyle,
   final String afterDigit = str.split(RegExp(r'\d')).last;
 
   return RichText(
+    textScaler: MediaQuery.textScalerOf(context),
     text: TextSpan(
-      style: DefaultTextStyle.of(context).style,
+      style: Theme.of(context).textTheme.bodyLarge,
       children: <TextSpan>[
         TextSpan(text: beforeDigit, style: textStyle),
         TextSpan(text: digit, style: digitStyle),

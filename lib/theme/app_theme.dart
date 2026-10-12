@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-/// Shared visual language: neutral surfaces, precise alignment and clear type.
+/// Shared visual language confirmed on the bookshelf: warm paper surfaces,
+/// coral actions and restrained pastel accents. Typography remains unchanged.
 abstract final class AppTheme {
-  static const defaultSeed = Color(0xFF283142);
-  static const cardRadius = 12.0;
-  static const controlRadius = 10.0;
+  static const defaultSeed = Color(0xFFC94C35);
+  static const cardRadius = 24.0;
+  static const controlRadius = 14.0;
 
   static ColorScheme scheme({
     required Color seed,
@@ -22,6 +23,10 @@ abstract final class AppTheme {
         onSecondary: Colors.white,
         secondaryContainer: Color(0xFFF0F0F0),
         onSecondaryContainer: Colors.black,
+        tertiary: Colors.black,
+        onTertiary: Colors.white,
+        tertiaryContainer: Color(0xFFEAEAEA),
+        onTertiaryContainer: Colors.black,
         surface: Colors.white,
         onSurface: Colors.black,
         surfaceContainerLowest: Colors.white,
@@ -35,50 +40,76 @@ abstract final class AppTheme {
       );
     }
     final dark = brightness == Brightness.dark;
-    final defaultPalette = seed.toARGB32() == defaultSeed.toARGB32();
-    return ColorScheme.fromSeed(seedColor: seed, brightness: brightness)
+    final defaultPalette = seed.toARGB32() == defaultSeed.toARGB32() ||
+        seed.toARGB32() == 0xFF283142; // Previous built-in palette.
+    return ColorScheme.fromSeed(
+            seedColor: defaultPalette ? defaultSeed : seed,
+            brightness: brightness)
         .copyWith(
       primary: defaultPalette
-          ? (dark ? const Color(0xFFD9DFEC) : defaultSeed)
+          ? (dark ? const Color(0xFFEA8F7B) : defaultSeed)
           : null,
       onPrimary: defaultPalette
-          ? (dark ? const Color(0xFF242C3B) : Colors.white)
+          ? (dark ? const Color(0xFF281914) : Colors.white)
           : null,
+      primaryFixed: dark && defaultPalette ? defaultSeed : null,
+      onPrimaryFixed: dark && defaultPalette ? Colors.white : null,
       primaryContainer: defaultPalette
-          ? (dark ? const Color(0xFF303845) : const Color(0xFFE9EDF4))
+          ? (dark ? const Color(0xFF332827) : const Color(0xFFFBE9E2))
           : null,
       onPrimaryContainer: defaultPalette
-          ? (dark ? const Color(0xFFDFE5F0) : const Color(0xFF283142))
+          ? (dark ? const Color(0xFFF2BBAF) : const Color(0xFF9A3C2B))
           : null,
       secondary: defaultPalette
-          ? (dark ? const Color(0xFFBEC7D5) : const Color(0xFF596579))
+          ? (dark ? const Color(0xFF9DBEAE) : const Color(0xFF50765D))
           : null,
       secondaryContainer: defaultPalette
-          ? (dark ? const Color(0xFF303744) : const Color(0xFFEBEEF3))
+          ? (dark ? const Color(0xFF24322D) : const Color(0xFFE7EEE5))
           : null,
       onSecondaryContainer: defaultPalette
-          ? (dark ? const Color(0xFFE0E5EE) : const Color(0xFF394353))
+          ? (dark ? const Color(0xFFC9DED4) : const Color(0xFF334E3B))
           : null,
+      tertiaryContainer:
+          dark ? const Color(0xFF302F29) : const Color(0xFFF1ECDA),
+      onTertiaryContainer:
+          dark ? const Color(0xFFDDD9C5) : const Color(0xFF655A32),
       surface: dark
-          ? (trueBlack ? Colors.black : const Color(0xFF111318))
-          : const Color(0xFFF7F8FA),
-      onSurface: dark ? const Color(0xFFE9ECF2) : const Color(0xFF1C2028),
+          ? (trueBlack ? Colors.black : const Color(0xFF141619))
+          : const Color(0xFFFBF9F5),
+      onSurface: dark ? const Color(0xFFECEEF0) : const Color(0xFF302D32),
       onSurfaceVariant:
-          dark ? const Color(0xFFB5BDCA) : const Color(0xFF5E6878),
+          dark ? const Color(0xFFAAB0B8) : const Color(0xFF716960),
       surfaceContainerLowest:
-          dark ? const Color(0xFF0B0D12) : const Color(0xFFFFFFFF),
+          dark ? const Color(0xFF101215) : const Color(0xFFFFFFFF),
       surfaceContainerLow:
-          dark ? const Color(0xFF171A21) : const Color(0xFFF0F2F6),
+          dark ? const Color(0xFF191B1F) : const Color(0xFFF5F1EB),
       surfaceContainer:
-          dark ? const Color(0xFF1D2129) : const Color(0xFFFFFFFF),
+          dark ? const Color(0xFF202327) : const Color(0xFFFFFDFA),
       surfaceContainerHigh:
-          dark ? const Color(0xFF272C35) : const Color(0xFFEBEEF3),
+          dark ? const Color(0xFF2A2E33) : const Color(0xFFF0ECE6),
       surfaceContainerHighest:
-          dark ? const Color(0xFF323844) : const Color(0xFFE1E5EC),
-      outline: dark ? const Color(0xFF8993A4) : const Color(0xFF7D8797),
-      outlineVariant: dark ? const Color(0xFF363D49) : const Color(0xFFDDE2EA),
+          dark ? const Color(0xFF343940) : const Color(0xFFEAE3D8),
+      inverseSurface: dark ? const Color(0xFFE8EAED) : null,
+      onInverseSurface: dark ? const Color(0xFF202327) : null,
+      outline: dark ? const Color(0xFF7F8994) : const Color(0xFF8A8177),
+      outlineVariant: dark ? const Color(0xFF383E46) : const Color(0xFFECE7E0),
     );
   }
+
+  static Color surfaceShadow(ColorScheme c, double opacity) =>
+      (c.brightness == Brightness.dark ? c.shadow : c.onSurface)
+          .withValues(alpha: opacity);
+
+  static Color darkOverlaySurface(ColorScheme c) =>
+      c.brightness == Brightness.dark
+          ? c.surfaceContainerHigh
+          : c.surfaceContainer;
+
+  static Color actionColor(ColorScheme c) =>
+      c.brightness == Brightness.dark ? c.primaryFixed : c.primary;
+
+  static Color onActionColor(ColorScheme c) =>
+      c.brightness == Brightness.dark ? c.onPrimaryFixed : c.onPrimary;
 
   static ThemeData apply(ThemeData base, {required bool eink}) {
     final c = base.colorScheme;
@@ -112,13 +143,24 @@ abstract final class AppTheme {
       cardTheme: CardThemeData(
         color: c.surfaceContainer,
         surfaceTintColor: Colors.transparent,
-        elevation: 0,
+        elevation: eink ? 0 : 1,
+        shadowColor: surfaceShadow(c, .06),
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(cardRadius),
             side: BorderSide(color: c.outlineVariant)),
       ),
-      filledButtonTheme: FilledButtonThemeData(style: button),
+      filledButtonTheme: FilledButtonThemeData(
+          style: button.copyWith(
+        backgroundColor: c.brightness == Brightness.dark
+            ? WidgetStateProperty.resolveWith<Color?>((states) =>
+                states.contains(WidgetState.disabled) ? null : actionColor(c))
+            : null,
+        foregroundColor: c.brightness == Brightness.dark
+            ? WidgetStateProperty.resolveWith<Color?>((states) =>
+                states.contains(WidgetState.disabled) ? null : onActionColor(c))
+            : null,
+      )),
       outlinedButtonTheme: OutlinedButtonThemeData(
           style: button.copyWith(
               side: WidgetStatePropertyAll(BorderSide(color: c.outline)))),
@@ -140,7 +182,9 @@ abstract final class AppTheme {
       ),
       inputDecorationTheme: InputDecorationThemeData(
         filled: true,
-        fillColor: c.surfaceContainer,
+        fillColor: c.brightness == Brightness.dark
+            ? c.surfaceContainerLow
+            : c.surfaceContainer,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
@@ -158,31 +202,31 @@ abstract final class AppTheme {
         backgroundColor: c.surfaceContainer,
         selectedColor: c.primaryContainer,
         side: BorderSide(color: c.outlineVariant),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         labelStyle: text.labelMedium?.copyWith(color: c.onSurface),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       ),
       dividerTheme:
           DividerThemeData(color: c.outlineVariant, thickness: 1, space: 24),
       dialogTheme: DialogThemeData(
-        backgroundColor: c.surfaceContainer,
+        backgroundColor: darkOverlaySurface(c),
         surfaceTintColor: Colors.transparent,
         titleTextStyle: text.titleLarge,
         contentTextStyle: text.bodyLarge,
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(26),
             side: eink ? BorderSide(color: c.outline) : BorderSide.none),
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: c.surfaceContainer,
+        backgroundColor: darkOverlaySurface(c),
         surfaceTintColor: Colors.transparent,
-        modalBackgroundColor: c.surfaceContainer,
+        modalBackgroundColor: darkOverlaySurface(c),
         showDragHandle: true,
         shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       ),
       popupMenuTheme: PopupMenuThemeData(
-        color: c.surfaceContainer,
+        color: darkOverlaySurface(c),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(controlRadius),

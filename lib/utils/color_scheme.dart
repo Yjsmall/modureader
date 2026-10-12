@@ -59,9 +59,11 @@ ThemeData colorSchema(
           // Flutter still requires this deprecated opt-in for the 2024 shapes.
           // ignore: deprecated_member_use
           sliderTheme: const SliderThemeData(year2023: false),
-          progressIndicatorTheme:
+          progressIndicatorTheme: const ProgressIndicatorThemeData(
+              // Flutter still requires this opt-in for the 2024 shapes.
               // ignore: deprecated_member_use
-              const ProgressIndicatorThemeData(year2023: false),
+              year2023: false,
+              stopIndicatorColor: Colors.transparent),
           scaffoldBackgroundColor: gropedBackgroundColor,
           snackBarTheme: SnackBarThemeData(
             behavior: SnackBarBehavior.floating,

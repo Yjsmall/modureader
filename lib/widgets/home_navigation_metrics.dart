@@ -3,7 +3,9 @@ import 'package:flutter/widgets.dart';
 /// Shared geometry for the floating home bar and its reserved content area.
 abstract final class HomeNavigationMetrics {
   static const barHeight = 68.0;
-  static const barOffset = 0.0;
+  static const barOffset = 12.0;
+  static const horizontalInset = 12.0;
+  static const barRadius = 24.0;
   static const contentGap = 12.0;
 
   static double barHeightFor(BuildContext context) =>

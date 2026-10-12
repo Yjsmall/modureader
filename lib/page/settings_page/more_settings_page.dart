@@ -1,3 +1,4 @@
+import 'package:anx_reader/widgets/common/container/filled_container.dart';
 import 'package:anx_reader/utils/app_motion.dart';
 import 'package:anx_reader/l10n/modu_strings.dart';
 import 'package:anx_reader/config/shared_preference_provider.dart';
@@ -347,19 +348,40 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
                                 .colorScheme
                                 .onSurfaceVariant)),
                   ),
-                  for (int index = 0; index < settings.length; index++)
-                    if (matches(settings[index]['sections'] as Widget))
-                      SettingsPageBuilder(
-                        isMobile: isMobile,
-                        id: index,
-                        selectedIndex: selectedIndex,
-                        setDetail: setDetail,
-                        icon: Icon(settings[index]['icon']),
-                        title: settings[index]['title'],
-                        titleBuilder: settings[index]['titleBuilder'],
-                        sections: settings[index]['sections'],
-                        subTitles: settings[index]['subtitles'],
-                      ),
+                  if (isMobile)
+                    FilledContainer(
+                      radius: 24,
+                      child: Column(children: [
+                        for (int index = 0; index < settings.length; index++)
+                          if (matches(settings[index]['sections'] as Widget))
+                            SettingsPageBuilder(
+                              isMobile: isMobile,
+                              id: index,
+                              selectedIndex: selectedIndex,
+                              setDetail: setDetail,
+                              icon: Icon(settings[index]['icon']),
+                              title: settings[index]['title'],
+                              titleBuilder: settings[index]['titleBuilder'],
+                              sections: settings[index]['sections'],
+                              subTitles: settings[index]['subtitles'],
+                            ),
+                      ]),
+                    )
+                  else ...[
+                    for (int index = 0; index < settings.length; index++)
+                      if (matches(settings[index]['sections'] as Widget))
+                        SettingsPageBuilder(
+                          isMobile: false,
+                          id: index,
+                          selectedIndex: selectedIndex,
+                          setDetail: setDetail,
+                          icon: Icon(settings[index]['icon']),
+                          title: settings[index]['title'],
+                          titleBuilder: settings[index]['titleBuilder'],
+                          sections: settings[index]['sections'],
+                          subTitles: settings[index]['subtitles'],
+                        ),
+                  ],
                 ],
                 if (showDeveloper)
                   ListTile(
@@ -397,17 +419,14 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 child: Material(
                   key: const ValueKey('settings-workspace'),
-                  color: Theme.of(context).colorScheme.surfaceContainer,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                          color: Theme.of(context).colorScheme.outlineVariant)),
+                  color: Theme.of(context).colorScheme.surface,
                   clipBehavior: Clip.antiAlias,
                   child: Row(children: [
                     SizedBox(
                         width: constraints.maxWidth >= 1000 ? 264 : 232,
-                        child: settingsList(false, showDeveloperEntry)),
-                    const VerticalDivider(thickness: 1, width: 1),
+                        child: FilledContainer(
+                            child: settingsList(false, showDeveloperEntry))),
+                    const SizedBox(width: 24),
                     Expanded(child: settingsDetail),
                   ]),
                 ),

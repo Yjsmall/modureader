@@ -39,17 +39,24 @@ class BookNoteTile extends StatelessWidget {
       onTap: onTap,
       onLongPress: onLongPress,
       onSecondaryTap: onLongPress,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(24),
       child: FilledContainer(
         color: backgroundColor,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         margin: margin,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(right: 16, top: 4),
-              child: _buildIcon(iconColor),
+              padding: const EdgeInsets.only(right: 12, top: 4),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: _buildIcon(iconColor)),
+              ),
             ),
             Expanded(
               child: Column(

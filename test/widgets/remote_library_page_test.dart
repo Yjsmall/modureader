@@ -279,37 +279,65 @@ void main() {
     Widget page() => ProviderScope(
         child: MaterialApp(
             home: RemoteLibraryPage(clientFactory: (_) => library)));
-    List<String> names() => tester
-        .widgetList<ListTile>(find.byType(ListTile))
-        .map((tile) => (tile.title! as Text).data!)
-        .toList();
+    Future<List<String>> names() async {
+      final scrollable = tester.state<ScrollableState>(find
+          .descendant(
+              of: find.byType(ListView), matching: find.byType(Scrollable))
+          .first);
+      final position = scrollable.position;
+      final offset = position.pixels;
+      final found = <String, double>{};
+      void collect() {
+        for (final element in find.byType(ListTile).evaluate()) {
+          final tile = element.widget as ListTile;
+          found[(tile.title! as Text).data!] =
+              tester.getTopLeft(find.byWidget(tile)).dy + position.pixels;
+        }
+      }
+
+      position.jumpTo(0);
+      await tester.pumpAndSettle();
+      collect();
+      while (position.pixels < position.maxScrollExtent) {
+        position.jumpTo((position.pixels + position.viewportDimension)
+            .clamp(0, position.maxScrollExtent));
+        await tester.pumpAndSettle();
+        collect();
+      }
+      position.jumpTo(offset.clamp(0, position.maxScrollExtent));
+      await tester.pumpAndSettle();
+      final ordered = found.keys.toList()
+        ..sort((a, b) => found[a]!.compareTo(found[b]!));
+      return ordered;
+    }
+
     await tester.pumpWidget(page());
     await tester.pumpAndSettle();
-    expect(names(), ['folder', 'A.epub', 'B.pdf', 'unknown.txt']);
+    expect(await names(), ['folder', 'A.epub', 'B.pdf', 'unknown.txt']);
     await tester.tap(find.byKey(const ValueKey('library-sort-field')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Date added').last);
     await tester.pumpAndSettle();
-    expect(names(), ['folder', 'B.pdf', 'A.epub', 'unknown.txt']);
+    expect(await names(), ['folder', 'B.pdf', 'A.epub', 'unknown.txt']);
     expect(find.textContaining('server creation time'), findsOneWidget);
     expect(find.textContaining('Not provided'), findsWidgets);
     await tester.tap(find.byKey(const ValueKey('library-sort-direction')));
     await tester.pumpAndSettle();
-    expect(names(), ['folder', 'A.epub', 'B.pdf', 'unknown.txt']);
+    expect(await names(), ['folder', 'A.epub', 'B.pdf', 'unknown.txt']);
     expect(find.text('Descending'), findsOneWidget);
     expect(library.listings, 1); // Sort is local, not another network request.
     await tester.tap(find.byKey(const ValueKey('library-file-filter')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('PDF').last);
     await tester.pumpAndSettle();
-    expect(names(), ['folder', 'B.pdf']);
+    expect(await names(), ['folder', 'B.pdf']);
     await tester.enterText(find.byType(TextField), 'b.PDF');
     await tester.pumpAndSettle();
-    expect(names(), ['B.pdf']);
+    expect(await names(), ['B.pdf']);
     await tester.enterText(find.byType(TextField), '');
     await tester.tap(find.byTooltip('Refresh'));
     await tester.pumpAndSettle();
-    expect(names(), ['folder', 'B.pdf']);
+    expect(await names(), ['folder', 'B.pdf']);
     expect(library.listings, 2);
     final saved = await LibraryViewOptionsStore.load();
     expect(saved.sort, LibrarySortField.createdAt);
@@ -321,7 +349,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Descending'), findsOneWidget);
     expect(find.text('Date added'), findsOneWidget);
-    expect(names(), ['folder', 'B.pdf']);
+    expect(await names(), ['folder', 'B.pdf']);
     expect(tester.takeException(), isNull);
   });
 }

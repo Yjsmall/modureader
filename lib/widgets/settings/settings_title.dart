@@ -18,9 +18,9 @@ Widget settingsTitle({
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Material(
-        color: selected ? c.surfaceContainerHigh : Colors.transparent,
+        color: selected ? c.primaryContainer : Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(14),
           side: BorderSide.none,
         ),
         clipBehavior: Clip.antiAlias,
@@ -32,7 +32,8 @@ Widget settingsTitle({
           titleAlignment: ListTileTitleAlignment.center,
           horizontalTitleGap: 12,
           leading: Icon(icon.icon,
-              color: selected ? c.onSurface : c.onSurfaceVariant, size: 22),
+              color: selected ? c.onPrimaryContainer : c.onSurfaceVariant,
+              size: 22),
           title: Text(title),
           trailing: isMobile
               ? const Icon(Icons.chevron_right, size: 18)

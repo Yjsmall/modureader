@@ -1,3 +1,4 @@
+import 'package:anx_reader/theme/app_theme.dart';
 import 'package:anx_reader/config/shared_preference_provider.dart';
 import 'package:anx_reader/widgets/common/container/base_rounded_container.dart';
 import 'package:anx_reader/widgets/common/container/outlined_container.dart';
@@ -51,9 +52,17 @@ class FilledContainer extends BaseRoundedContainer {
 
     return buildShapeDecoration(
       color: effectiveColor,
+      shadows: [
+        if (!Prefs().eInkMode)
+          BoxShadow(
+            color: AppTheme.surfaceShadow(Theme.of(context).colorScheme, .025),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          )
+      ],
       borderSide: BorderSide(
           color: Theme.of(context).colorScheme.outlineVariant,
-          width: 1,
+          width: .75,
           strokeAlign: BorderSide.strokeAlignInside),
       borderRadius: borderRadius,
     );

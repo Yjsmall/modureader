@@ -39,8 +39,16 @@ abstract class StatisticsDashboardTileBase {
     return FilledContainer(
       width: double.infinity,
       height: double.infinity,
-      radius: 16,
-      color: Theme.of(context).colorScheme.surfaceContainer,
+      radius: 24,
+      color: switch (type) {
+        StatisticsDashboardTileType.periodSummary =>
+          Theme.of(context).colorScheme.secondaryContainer,
+        StatisticsDashboardTileType.readingStreak =>
+          Theme.of(context).colorScheme.primaryContainer,
+        StatisticsDashboardTileType.readingDaysTotal =>
+          Theme.of(context).colorScheme.tertiaryContainer,
+        _ => Theme.of(context).colorScheme.surfaceContainer,
+      },
       child: Stack(
         children: [
           Positioned(
@@ -56,7 +64,7 @@ abstract class StatisticsDashboardTileBase {
           ),
           Container(
             color: Colors.transparent,
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

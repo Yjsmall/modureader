@@ -1,4 +1,5 @@
 import 'package:anx_reader/widgets/bookshelf/bookshelf_caption.dart';
+import 'package:anx_reader/theme/app_theme.dart';
 import 'package:anx_reader/widgets/bookshelf/bookshelf_style.dart';
 import 'package:anx_reader/widgets/bookshelf/continue_reading_card.dart';
 import 'package:anx_reader/utils/app_motion.dart';
@@ -449,7 +450,7 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
       ],
       child: Ink(
         decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
+            color: AppTheme.actionColor(Theme.of(context).colorScheme),
             borderRadius: BorderRadius.circular(14)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
@@ -457,12 +458,14 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.add,
-                  size: 20, color: Theme.of(context).colorScheme.onPrimary),
+                  size: 20,
+                  color: AppTheme.onActionColor(Theme.of(context).colorScheme)),
               if (MediaQuery.textScalerOf(context).scale(14) <= 20) ...[
                 const SizedBox(width: 8),
                 Text(ModuStrings.text(context, '导入书籍', 'Import books'),
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimary)),
+                        color: AppTheme.onActionColor(
+                            Theme.of(context).colorScheme))),
               ],
             ]),
           ),

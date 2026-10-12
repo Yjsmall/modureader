@@ -1,8 +1,8 @@
+import 'package:anx_reader/theme/app_theme.dart';
 import 'package:anx_reader/models/book.dart';
 import 'package:flutter/material.dart';
 
-/// A page-local palette. Shared book widgets retain their normal appearance
-/// when rendered outside the bookshelf.
+/// Bookshelf-specific cover surfaces layered over the shared app theme.
 class BookshelfStyle extends ThemeExtension<BookshelfStyle> {
   const BookshelfStyle({
     required this.peach,
@@ -29,32 +29,12 @@ class BookshelfStyle extends ThemeExtension<BookshelfStyle> {
             featured: Colors.white,
             eink: true)
         : BookshelfStyle(
-            peach: dark ? const Color(0xFF332925) : const Color(0xFFF8E8DF),
-            sand: dark ? const Color(0xFF302F23) : const Color(0xFFF1ECDA),
-            mint: dark ? const Color(0xFF233029) : const Color(0xFFE7EEE5),
-            featured: dark ? const Color(0xFF392A24) : const Color(0xFFFAE6DC),
+            peach: dark ? const Color(0xFF302A2B) : const Color(0xFFF8E8DF),
+            sand: dark ? const Color(0xFF302F29) : const Color(0xFFF1ECDA),
+            mint: dark ? const Color(0xFF26352F) : const Color(0xFFE7EEE5),
+            featured: dark ? const Color(0xFF30282A) : const Color(0xFFFAE6DC),
           );
-    final c = eink
-        ? base.colorScheme
-        : base.colorScheme.copyWith(
-            primary: dark ? const Color(0xFFFFAA91) : const Color(0xFFC94C35),
-            onPrimary: dark ? const Color(0xFF3C2119) : Colors.white,
-            secondary: dark ? const Color(0xFFA9C8B0) : const Color(0xFF50765D),
-            primaryContainer:
-                dark ? const Color(0xFF4A2F26) : const Color(0xFFFBE9E2),
-            onPrimaryContainer:
-                dark ? const Color(0xFFFFDDCE) : const Color(0xFF9A3C2B),
-            surface: dark ? base.colorScheme.surface : const Color(0xFFFBF9F5),
-            surfaceContainer:
-                dark ? const Color(0xFF24221F) : const Color(0xFFFFFDFA),
-            surfaceContainerHigh:
-                dark ? const Color(0xFF302C25) : const Color(0xFFF0ECE6),
-            onSurface: dark ? const Color(0xFFF4EFE8) : const Color(0xFF302D32),
-            onSurfaceVariant:
-                dark ? const Color(0xFFC5BDB2) : const Color(0xFF716960),
-            outlineVariant:
-                dark ? const Color(0xFF494237) : const Color(0xFFECE7E0),
-          );
+    final c = base.colorScheme;
     return base.copyWith(
       colorScheme: c,
       scaffoldBackgroundColor: c.surface,
@@ -128,7 +108,7 @@ class BookshelfCard extends StatelessWidget {
         boxShadow: [
           if (!style.eink)
             BoxShadow(
-              color: theme.colorScheme.onSurface.withValues(alpha: .025),
+              color: AppTheme.surfaceShadow(theme.colorScheme, .025),
               blurRadius: 16,
               offset: const Offset(0, 6),
             )

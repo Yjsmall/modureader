@@ -65,7 +65,18 @@ class _SentenceContextsPageState extends State<SentenceContextsPage> {
                       horizontal: 20,
                       vertical: 12,
                     ),
-                    leading: const Icon(Icons.menu_book_outlined),
+                    leading: DecoratedBox(
+                      decoration: BoxDecoration(
+                          color:
+                              Theme.of(context).colorScheme.tertiaryContainer,
+                          borderRadius: BorderRadius.circular(14)),
+                      child: Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Icon(Icons.menu_book_outlined,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onTertiaryContainer)),
+                    ),
                     title: Text(document.title),
                     subtitle: Text(
                       [
@@ -186,6 +197,8 @@ class _SentenceContextCardsPageState extends State<SentenceContextCardsPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Chip(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.secondaryContainer,
                           label: Text(sentence.word),
                           avatar: const Icon(Icons.format_quote, size: 18),
                         ),

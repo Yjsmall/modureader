@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:anx_reader/utils/app_motion.dart';
+import 'package:anx_reader/theme/app_theme.dart';
 
 abstract class BaseRoundedContainer extends StatelessWidget {
   const BaseRoundedContainer({
@@ -15,7 +16,7 @@ abstract class BaseRoundedContainer extends StatelessWidget {
     this.animationCurve = Curves.easeInOut,
   });
 
-  static const double _defaultRadius = 12;
+  static const double _defaultRadius = AppTheme.cardRadius;
 
   final Widget child;
   final double? width;
@@ -65,11 +66,13 @@ abstract class BaseRoundedContainer extends StatelessWidget {
   @protected
   ShapeDecoration buildShapeDecoration({
     Color? color,
+    List<BoxShadow>? shadows,
     required BorderSide borderSide,
     required BorderRadiusGeometry borderRadius,
   }) {
     return ShapeDecoration(
       color: color,
+      shadows: shadows,
       shape: RoundedSuperellipseBorder(
         borderRadius: borderRadius,
         side: borderSide,

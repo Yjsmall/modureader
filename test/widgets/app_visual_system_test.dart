@@ -2,6 +2,15 @@ import 'package:anx_reader/widgets/reading_page/widget_title.dart';
 import 'package:anx_reader/widgets/bookshelf/book_cover.dart';
 import 'package:anx_reader/widgets/bookshelf/bookshelf_caption.dart';
 import 'package:anx_reader/widgets/bookshelf/bookshelf_style.dart';
+import 'package:anx_reader/page/home_page/notes_page.dart';
+import 'package:anx_reader/providers/notes_statistics.dart';
+import 'package:anx_reader/providers/statictics_summary_value.dart';
+import 'package:anx_reader/providers/statistic_data.dart';
+import 'package:anx_reader/providers/total_reading_time.dart';
+import 'package:anx_reader/models/statistic_data_model.dart';
+import 'package:anx_reader/page/home_page/statistics_page.dart';
+import 'package:anx_reader/widgets/statistic/statistics_dashboard.dart';
+import 'package:anx_reader/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
 import 'dart:io';
 import 'dart:math';
 
@@ -90,6 +99,52 @@ class _Status extends SyncStatus {
       uploading: []);
 }
 
+class _NotesStats extends NotesStatistics {
+  @override
+  Future<Map<String, int>> build() async =>
+      {'numberOfNotes': 45, 'numberOfBooks': 3};
+}
+
+class _NotesBooks extends BookIdAndNotes {
+  @override
+  Future<List<Map<String, dynamic>>> build() async => [
+        for (final (id, title, author, count, time) in [
+          (101, '山间来信', '林见山', 18, 2400),
+          (102, '慢慢走，深深读', '陈知远', 12, 1800),
+          (103, '日常的诗意', '许清和', 15, 3100),
+        ])
+          {
+            'bookId': id,
+            'book': Book.mock().copyWith(
+                id: id,
+                title: title,
+                author: author,
+                coverPath: 'cover/preview-note-$id.png'),
+            'numberOfNotes': count,
+            'readingTime': time
+          },
+      ];
+}
+
+class _Summary extends StaticticsSummaryValue {
+  @override
+  Future<int> build(StatisticType type) async => switch (type) {
+        StatisticType.totalBooks => 12,
+        StatisticType.totalDates => 28,
+        StatisticType.totalNotes => 45,
+      };
+}
+
+class _PeriodStats extends StatisticData {
+  @override
+  Future<StatisticDataModel> build() async => StatisticDataModel.mock();
+}
+
+class _TotalTime extends TotalReadingTime {
+  @override
+  Future<int> build() async => 125000;
+}
+
 late ProviderContainer previewContainer;
 
 const exportPreviews = bool.fromEnvironment('UPDATE_UI_PREVIEWS');
@@ -163,6 +218,14 @@ void main() {
       groupDaoProvider.overrideWith(_Groups.new),
       tagListProvider.overrideWith(_Tags.new),
       syncStatusProvider.overrideWith(_Status.new),
+      notesStatisticsProvider.overrideWith(_NotesStats.new),
+      bookIdAndNotesProvider.overrideWith(_NotesBooks.new),
+      StaticticsSummaryValueProvider(StatisticType.totalBooks)
+          .overrideWith(_Summary.new),
+      StaticticsSummaryValueProvider(StatisticType.totalDates)
+          .overrideWith(_Summary.new),
+      statisticDataProvider.overrideWith(_PeriodStats.new),
+      totalReadingTimeProvider.overrideWith(_TotalTime.new),
     ]);
     if (!exportPreviews) return;
     final serif = FontLoader('SourceHanSerif')
@@ -228,7 +291,11 @@ void main() {
         for (final surface in [
           c.surface,
           c.surfaceContainer,
-          c.surfaceContainerLow
+          c.surfaceContainerLow,
+          if (brightness == Brightness.dark) ...[
+            c.surfaceContainerHigh,
+            c.surfaceContainerHighest,
+          ]
         ]) {
           expect(contrast(c.onSurface, surface), greaterThanOrEqualTo(4.5));
           expect(
@@ -237,6 +304,19 @@ void main() {
         expect(contrast(c.onPrimary, c.primary), greaterThanOrEqualTo(4.5));
         expect(contrast(c.onPrimaryContainer, c.primaryContainer),
             greaterThanOrEqualTo(4.5));
+        if (brightness == Brightness.dark) {
+          expect(contrast(c.onSecondaryContainer, c.secondaryContainer),
+              greaterThanOrEqualTo(4.5));
+          expect(contrast(c.onTertiaryContainer, c.tertiaryContainer),
+              greaterThanOrEqualTo(4.5));
+          expect(contrast(AppTheme.onActionColor(c), AppTheme.actionColor(c)),
+              greaterThanOrEqualTo(4.5));
+          final oled = AppTheme.scheme(
+              seed: seed, brightness: brightness, trueBlack: true);
+          expect(oled.surface, Colors.black);
+          expect(contrast(oled.onSurface, oled.surface),
+              greaterThanOrEqualTo(4.5));
+        }
       }
     }
   });
@@ -394,30 +474,90 @@ void main() {
     });
   }
 
-  testWidgets('settings desktop uses the same visual system', (tester) async {
-    tester.view.physicalSize = const Size(1440, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(app(Scaffold(
-        body: Row(children: [
-      AppNavigationSidebar(
-          destinations: destinations,
-          selectedIndex: 6,
-          onSelected: (_) {},
-          extended: true),
-      const Expanded(child: SettingsPage())
-    ]))));
-    await tester.pumpAndSettle();
-    expect(find.text('阅读与外观'), findsOneWidget);
-    expect(find.byKey(const ValueKey('settings-workspace')), findsOneWidget);
-    expect(find.byKey(const ValueKey('settings-detail-panel')), findsOneWidget);
-    expect(find.text('主题 · 显示 · 封面'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-    if (exportPreviews) {
-      await expectLater(find.byKey(const ValueKey('preview')),
-          matchesGoldenFile('../../docs/design/previews/settings-desktop.png'));
-    }
-  });
+  for (final brightness in Brightness.values) {
+    testWidgets(
+        'settings desktop ${brightness.name} uses the same visual system',
+        (tester) async {
+      tester.view.physicalSize = const Size(1440, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(app(
+          Scaffold(
+              body: Row(children: [
+            AppNavigationSidebar(
+                destinations: destinations,
+                selectedIndex: 6,
+                onSelected: (_) {},
+                extended: true),
+            const Expanded(child: SettingsPage())
+          ])),
+          brightness: brightness));
+      await tester.pumpAndSettle();
+      expect(find.text('阅读与外观'), findsOneWidget);
+      expect(find.byKey(const ValueKey('settings-workspace')), findsOneWidget);
+      expect(
+          find.byKey(const ValueKey('settings-detail-panel')), findsOneWidget);
+      expect(find.text('主题 · 显示 · 封面'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      if (exportPreviews) {
+        await expectLater(
+            find.byKey(const ValueKey('preview')),
+            matchesGoldenFile(
+                '../../docs/design/previews/settings-desktop${brightness == Brightness.dark ? '-dark' : ''}.png'));
+      }
+    });
+  }
+
+  for (final (name, page, index, brightness, scale) in [
+    ('notes-phone-light', const NotesPage(), 4, Brightness.light, 1.0),
+    ('notes-phone-dark', const NotesPage(), 4, Brightness.dark, 1.0),
+    ('notes-phone-large-text', const NotesPage(), 4, Brightness.light, 3.2),
+    ('settings-phone-light', const SettingsPage(), 6, Brightness.light, 1.0),
+    ('settings-phone-dark', const SettingsPage(), 6, Brightness.dark, 1.0),
+    (
+      'settings-phone-large-text',
+      const SettingsPage(),
+      6,
+      Brightness.light,
+      3.2
+    ),
+  ]) {
+    testWidgets('$name shared style layout', (tester) async {
+      tester.view.physicalSize = const Size(375, 812);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(app(
+          Stack(children: [
+            HomeNavigationBody(
+                hasBottomBar: true, scrollBehindBar: true, child: page),
+            Positioned(
+                left: 0,
+                right: 0,
+                bottom: HomeNavigationMetrics.barOffset,
+                child: Builder(
+                    builder: (context) => SizedBox(
+                        height: HomeNavigationMetrics.barHeightFor(context),
+                        child: AppNavigationDock(
+                            destinations: destinations,
+                            selectedIndex: index,
+                            onSelected: (_) {})))),
+          ]),
+          brightness: brightness,
+          scale: scale));
+      await tester.pumpAndSettle();
+      if (index == 4) {
+        expect(find.byKey(const ValueKey('notes-overview')), findsOneWidget);
+        expect(find.byType(BookCover), findsWidgets);
+      } else {
+        expect(find.text('阅读与外观'), findsOneWidget);
+      }
+      expect(tester.takeException(), isNull);
+      if (exportPreviews && scale == 1) {
+        await expectLater(find.byKey(const ValueKey('preview')),
+            matchesGoldenFile('../../docs/design/previews/$name.png'));
+      }
+    });
+  }
 
   testWidgets('desktop category and description follow language changes',
       (tester) async {
@@ -436,6 +576,42 @@ void main() {
         findsOneWidget);
     expect(find.descendant(of: panel, matching: find.text('外观')), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('history cards share the confirmed style on a narrow phone',
+      (tester) async {
+    tester.view.physicalSize = const Size(375, 812);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    Prefs().statisticsDashboardTiles = [
+      StatisticsDashboardTileType.readingDaysTotal,
+      StatisticsDashboardTileType.booksTotal,
+      StatisticsDashboardTileType.periodSummary,
+    ];
+    await tester.pumpWidget(app(Scaffold(
+      appBar: AppBar(title: const Text('历史')),
+      body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(children: [
+            const StatisticsDashboard(),
+            const SizedBox(height: 24),
+            BookStatisticItem(
+                book: Book.mock().copyWith(
+                    title: '山间来信',
+                    author: '林见山',
+                    coverPath: 'cover/preview-history.png'),
+                readingTime: 2400),
+          ])),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.byType(BookCover), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    if (exportPreviews) {
+      await expectLater(
+          find.byKey(const ValueKey('preview')),
+          matchesGoldenFile(
+              '../../docs/design/previews/history-cards-phone-light.png'));
+    }
   });
 
   testWidgets('e-ink retains monochrome surfaces and disabled motion',

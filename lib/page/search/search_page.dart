@@ -83,7 +83,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     icon: const Icon(Icons.clear),
                     onPressed: _clearQuery,
                   ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(32)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           ),
           textInputAction: TextInputAction.search,

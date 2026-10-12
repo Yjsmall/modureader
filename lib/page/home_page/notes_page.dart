@@ -28,42 +28,44 @@ class _NotesPageState extends ConsumerState<NotesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      bottom: false,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth > 600) {
-            return Row(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      notesStatistic(),
-                      bookNotesList(false),
-                    ],
-                  ),
-                ),
-                const VerticalDivider(thickness: 1, width: 1),
-                const Expanded(
-                  flex: 2,
-                  child: NotesDetail(),
-                ),
-              ],
-            );
-          } else {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                notesStatistic(),
-                bookNotesList(true),
-              ],
-            );
-          }
-        },
-      ),
-    );
+    return Scaffold(
+        appBar: AppBar(title: Text(L10n.of(context).navBarNotes)),
+        body: SafeArea(
+          bottom: false,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth > 600) {
+                return Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          notesStatistic(),
+                          bookNotesList(false),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 24),
+                    const Expanded(
+                      flex: 2,
+                      child: NotesDetail(),
+                    ),
+                  ],
+                );
+              } else {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    notesStatistic(),
+                    bookNotesList(true),
+                  ],
+                );
+              }
+            },
+          ),
+        ));
   }
 
   Widget notesStatistic() {
@@ -82,8 +84,12 @@ class _NotesPageState extends ConsumerState<NotesPage> {
       data: (data) {
         return SafeArea(
           bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.all(24),
+          child: FilledContainer(
+            key: const ValueKey('notes-overview'),
+            width: double.infinity,
+            color: Theme.of(context).colorScheme.primaryContainer,
+            margin: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+            padding: const EdgeInsets.all(20),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               highlightDigit(
@@ -160,90 +166,100 @@ class _NotesPageState extends ConsumerState<NotesPage> {
     );
     TextStyle readingTimeStyle =
         Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 14);
-    return GestureDetector(
-      onTap: () {
-        if (isMobile) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => BookNotesPage(
-                      book: book,
-                      numberOfNotes: numberOfNotes,
-                      isMobile: true,
-                    )),
-          );
-        } else {
-          ref
-              .read(notesPageCurrentBookProvider.notifier)
-              .setData(book, numberOfNotes);
-        }
-      },
-      child: FilledContainer(
+    return FilledContainer(
         margin: const EdgeInsets.only(top: 12, left: 24, right: 24),
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  highlightDigit(
-                    context,
-                    L10n.of(context).notesNotes(numberOfNotes),
-                    textStyle,
-                    digitStyle,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(book.title, style: titleStyle),
-                  const SizedBox(height: 18),
-                  // Reading time
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        Icon(Icons.access_time,
-                            size: 16,
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant),
-                        const SizedBox(width: 4),
-                        Text(
-                          convertSeconds(readingTime),
-                          style: readingTimeStyle,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: () {
+            if (isMobile) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => BookNotesPage(
+                          book: book,
+                          numberOfNotes: numberOfNotes,
+                          isMobile: true,
+                        )),
+              );
+            } else {
+              ref
+                  .read(notesPageCurrentBookProvider.notifier)
+                  .setData(book, numberOfNotes);
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      highlightDigit(
+                        context,
+                        L10n.of(context).notesNotes(numberOfNotes),
+                        textStyle,
+                        digitStyle,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(book.title, style: titleStyle),
+                      const SizedBox(height: 18),
+                      // Reading time
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            Icon(Icons.access_time,
+                                size: 16,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant),
+                            const SizedBox(width: 4),
+                            Text(
+                              convertSeconds(readingTime),
+                              style: readingTimeStyle,
+                            ),
+                            Text(" | ", style: readingTimeStyle),
+                            Icon(Icons.bar_chart,
+                                size: 16,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${(book.readingPercentage * 100).toStringAsFixed(1)}%',
+                              style: readingTimeStyle,
+                            ),
+                          ],
                         ),
-                        Text(" | ", style: readingTimeStyle),
-                        Icon(Icons.bar_chart,
-                            size: 16,
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${(book.readingPercentage * 100).toStringAsFixed(1)}%',
-                          style: readingTimeStyle,
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 16),
+                DecoratedBox(
+                    decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(16)),
+                    child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Hero(
+                          tag: isMobile
+                              ? book.coverFullPath
+                              : '${book.coverFullPath}notMobile',
+                          child: BookCover(
+                            book: book,
+                            height: 130,
+                            width: 90,
+                            radius: 6,
+                          ),
+                        ))),
+              ],
             ),
-            // Expanded(child: SizedBox()),
-            Hero(
-              tag: isMobile
-                  ? book.coverFullPath
-                  : '${book.coverFullPath}notMobile',
-              child: BookCover(
-                book: book,
-                height: 130,
-                width: 90,
-                radius: 8,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }
 

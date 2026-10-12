@@ -403,8 +403,7 @@ class _RemoteLibraryPageState extends ConsumerState<RemoteLibraryPage> {
                     decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.search),
                         hintText: ModuStrings.text(context, '筛选当前目录中的文件',
-                            'Filter files in this folder'),
-                        border: const OutlineInputBorder()))),
+                            'Filter files in this folder')))),
           if (root != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -483,8 +482,11 @@ class _RemoteLibraryPageState extends ConsumerState<RemoteLibraryPage> {
                                       '当前目录没有匹配的文件。',
                                       'No matching files in this folder.')))
                               : ListView.builder(
-                                  padding: EdgeInsets.only(
-                                      bottom: 12 +
+                                  padding: EdgeInsets.fromLTRB(
+                                      24,
+                                      8,
+                                      24,
+                                      12 +
                                           MediaQuery.paddingOf(context).bottom +
                                           (_activeName == null
                                               ? HomeNavigationClearance.of(
@@ -495,24 +497,47 @@ class _RemoteLibraryPageState extends ConsumerState<RemoteLibraryPage> {
                                     final entry = visible[index];
                                     final imported = _imported
                                         .contains(entry.uri.toString());
-                                    return ListTile(
+                                    return Card(
                                         key: ValueKey(
-                                            'library-entry:${entry.uri}'),
-                                        leading: Icon(entry.isDirectory
-                                            ? Icons.folder_outlined
-                                            : entry.isBook
-                                                ? Icons.menu_book_outlined
-                                                : Icons
-                                                    .insert_drive_file_outlined),
-                                        title: Text(entry.name),
-                                        subtitle: Text(_entrySubtitle(entry)),
-                                        onTap: entry.isDirectory
-                                            ? () => _browse(entry.uri)
-                                            : null,
-                                        trailing: entry.isDirectory
-                                            ? Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
+                                            'library-card:${entry.uri}'),
+                                        margin:
+                                            const EdgeInsets.only(bottom: 12),
+                                        clipBehavior: Clip.antiAlias,
+                                        child: ListTile(
+                                            key: ValueKey(
+                                                'library-entry:${entry.uri}'),
+                                            leading: DecoratedBox(
+                                                decoration: BoxDecoration(
+                                                    color: entry.isDirectory
+                                                        ? Theme.of(context)
+                                                            .colorScheme
+                                                            .tertiaryContainer
+                                                        : Theme.of(context)
+                                                            .colorScheme
+                                                            .secondaryContainer,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            14)),
+                                                child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            10),
+                                                    child: Icon(entry
+                                                            .isDirectory
+                                                        ? Icons.folder_outlined
+                                                        : entry.isBook
+                                                            ? Icons
+                                                                .menu_book_outlined
+                                                            : Icons
+                                                                .insert_drive_file_outlined))),
+                                            title: Text(entry.name),
+                                            subtitle:
+                                                Text(_entrySubtitle(entry)),
+                                            onTap: entry.isDirectory
+                                                ? () => _browse(entry.uri)
+                                                : null,
+                                            trailing: entry.isDirectory
+                                                ? Row(mainAxisSize: MainAxisSize.min, children: [
                                                     IconButton(
                                                         tooltip: t('导入文件夹',
                                                             'Import folder'),
@@ -526,28 +551,9 @@ class _RemoteLibraryPageState extends ConsumerState<RemoteLibraryPage> {
                                                     const Icon(
                                                         Icons.chevron_right),
                                                   ])
-                                            : !entry.isBook
-                                                ? null
-                                                : IconButton(
-                                                    tooltip: imported
-                                                        ? ModuStrings.text(
-                                                            context,
-                                                            '本次已导入',
-                                                            'Imported this session')
-                                                        : ModuStrings.text(
-                                                            context,
-                                                            '下载并导入书架',
-                                                            'Download and import'),
-                                                    onPressed: _activeName !=
-                                                                null ||
-                                                            imported
-                                                        ? null
-                                                        : () => _getBook(entry),
-                                                    icon: Icon(imported
-                                                        ? Icons
-                                                            .check_circle_outline
-                                                        : Icons
-                                                            .download_outlined)));
+                                                : !entry.isBook
+                                                    ? null
+                                                    : IconButton(tooltip: imported ? ModuStrings.text(context, '本次已导入', 'Imported this session') : ModuStrings.text(context, '下载并导入书架', 'Download and import'), onPressed: _activeName != null || imported ? null : () => _getBook(entry), icon: Icon(imported ? Icons.check_circle_outline : Icons.download_outlined))));
                                   })),
           if (_activeName != null)
             Padding(

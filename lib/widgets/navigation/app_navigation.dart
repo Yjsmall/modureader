@@ -1,4 +1,6 @@
+import 'package:anx_reader/theme/app_theme.dart';
 import 'package:anx_reader/l10n/modu_strings.dart';
+import 'package:anx_reader/widgets/home_navigation_metrics.dart';
 import 'package:flutter/material.dart';
 
 class AppDestination {
@@ -34,29 +36,51 @@ class AppNavigationDock extends StatelessWidget {
         if (!visible.contains(i)) i
     ];
     if (overflow.isNotEmpty) visible.insert(visible.length - 1, -1);
-    return Material(
-      color: c.surfaceContainer,
-      shape: Border(top: BorderSide(color: c.outlineVariant)),
-      clipBehavior: Clip.antiAlias,
-      child: Row(
-        children: [
-          for (final index in visible)
-            Expanded(
-              child: _DockItem(
-                label: index == -1
-                    ? ModuStrings.text(context, '更多', 'More')
-                    : destinations[index].label,
-                icon: index == -1 ? Icons.more_horiz : destinations[index].icon,
-                selected: index == selectedIndex ||
-                    (index == -1 && overflow.contains(selectedIndex)),
-                onTap: index == -1
-                    ? () => _showMore(context, overflow)
-                    : () => onSelected(index),
-              ),
+    return Padding(
+        padding: const EdgeInsets.symmetric(
+            horizontal: HomeNavigationMetrics.horizontalInset),
+        child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius:
+                  BorderRadius.circular(HomeNavigationMetrics.barRadius),
+              boxShadow: [
+                if ((Theme.of(context).cardTheme.elevation ?? 0) > 0)
+                  BoxShadow(
+                      color: AppTheme.surfaceShadow(c, .055),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6)),
+              ],
             ),
-        ],
-      ),
-    );
+            child: Material(
+              color: AppTheme.darkOverlaySurface(c),
+              shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(HomeNavigationMetrics.barRadius),
+                side: BorderSide(color: c.outlineVariant, width: .75),
+              ),
+              surfaceTintColor: Colors.transparent,
+              clipBehavior: Clip.antiAlias,
+              child: Row(
+                children: [
+                  for (final index in visible)
+                    Expanded(
+                      child: _DockItem(
+                        label: index == -1
+                            ? ModuStrings.text(context, '更多', 'More')
+                            : destinations[index].label,
+                        icon: index == -1
+                            ? Icons.more_horiz
+                            : destinations[index].icon,
+                        selected: index == selectedIndex ||
+                            (index == -1 && overflow.contains(selectedIndex)),
+                        onTap: index == -1
+                            ? () => _showMore(context, overflow)
+                            : () => onSelected(index),
+                      ),
+                    ),
+                ],
+              ),
+            )));
   }
 
   void _showMore(BuildContext context, List<int> indices) {
@@ -189,8 +213,7 @@ class AppNavigationSidebar extends StatelessWidget {
                       ? MainAxisAlignment.start
                       : MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.menu_book_outlined,
-                        color: c.onSurface, size: 24),
+                    Icon(Icons.menu_book_outlined, color: c.primary, size: 24),
                     if (extended) ...[
                       const SizedBox(width: 12),
                       Expanded(
@@ -218,15 +241,15 @@ class AppNavigationSidebar extends StatelessWidget {
                                 leading: Icon(destinations[index].icon),
                                 title: Text(destinations[index].label),
                                 selected: selectedIndex == index,
-                                selectedTileColor: c.surfaceContainerHigh,
-                                selectedColor: c.onSurface,
+                                selectedTileColor: c.primaryContainer,
+                                selectedColor: c.onPrimaryContainer,
                                 onTap: () => onSelected(index),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 0),
                               )
                             : Material(
                                 color: selectedIndex == index
-                                    ? c.surfaceContainerHigh
+                                    ? c.primaryContainer
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(12),
                                 child: _DockItem(

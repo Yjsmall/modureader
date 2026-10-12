@@ -42,6 +42,7 @@ class _StatisticPageState extends State<StatisticPage> {
     final numberOfBook = await readingTimeDao.selectTotalNumberOfBook();
     final numberOfDate = await readingTimeDao.selectTotalNumberOfDate();
     final numberOfNotes = await readingTimeDao.selectTotalNumberOfNotes();
+    if (!mounted) return;
     setState(() {
       totalNumberOfBook = numberOfBook;
       totalNumberOfDate = numberOfDate;
@@ -64,7 +65,7 @@ class _StatisticPageState extends State<StatisticPage> {
       body: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
               StatisticsDashboardTitle(),
@@ -323,7 +324,7 @@ class BookStatisticItem extends StatelessWidget {
       heroTag: heroTag,
       child: FilledContainer(
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(20.0),
         child: Row(
           children: [
             Hero(
@@ -367,7 +368,8 @@ class BookStatisticItem extends StatelessWidget {
                           child: EinkStaticIndicator(
                               child: LinearProgressIndicator(
                             value: book.readingPercentage.clamp(0, 1),
-                            backgroundColor: Colors.grey[300],
+                            backgroundColor:
+                                Theme.of(context).colorScheme.outlineVariant,
                             valueColor: AlwaysStoppedAnimation<Color>(
                                 Theme.of(context).colorScheme.primary),
                           )),

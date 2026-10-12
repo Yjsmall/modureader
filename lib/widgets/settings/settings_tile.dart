@@ -143,7 +143,8 @@ class AndroidSettingsTile extends StatelessWidget {
                     onPressed?.call(context);
                   }
                 },
-          highlightColor: Theme.of(context).listTileTheme.selectedColor,
+          highlightColor:
+              Theme.of(context).colorScheme.primary.withValues(alpha: .08),
           child: Row(
             children: [
               if (leading != null)

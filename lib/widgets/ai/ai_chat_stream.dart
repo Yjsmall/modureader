@@ -1106,8 +1106,8 @@ class AiChatStreamState extends ConsumerState<AiChatStream> {
     final chips = _readingChips;
     return Material(
       key: const ValueKey('ai-skill-picker'),
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(16),
+      color: Theme.of(context).colorScheme.surfaceContainer,
+      borderRadius: BorderRadius.circular(24),
       clipBehavior: Clip.antiAlias,
       child: SingleChildScrollView(
         key: ValueKey(
@@ -1642,9 +1642,12 @@ class AiChatStreamState extends ConsumerState<AiChatStream> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isUser
-                    ? Theme.of(context).colorScheme.surfaceContainer
-                    : Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : Theme.of(context).colorScheme.surfaceContainer,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    width: .75),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

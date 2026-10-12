@@ -1,3 +1,4 @@
+import 'package:anx_reader/theme/app_theme.dart';
 import 'package:anx_reader/l10n/modu_strings.dart';
 import 'package:anx_reader/models/book.dart';
 import 'package:anx_reader/service/book.dart';
@@ -30,7 +31,7 @@ class ContinueReadingCard extends ConsumerWidget {
         boxShadow: [
           if (!style.eink)
             BoxShadow(
-              color: c.onSurface.withValues(alpha: .035),
+              color: AppTheme.surfaceShadow(c, .035),
               blurRadius: 24,
               offset: const Offset(0, 8),
             )
@@ -64,7 +65,7 @@ class ContinueReadingCard extends ConsumerWidget {
                         decoration: BoxDecoration(boxShadow: [
                           if (!style.eink)
                             BoxShadow(
-                              color: c.onSurface.withValues(alpha: .13),
+                              color: AppTheme.surfaceShadow(c, .13),
                               blurRadius: 18,
                               offset: const Offset(6, 10),
                             )
@@ -135,8 +136,8 @@ class ContinueReadingCard extends ConsumerWidget {
                 FilledButton.icon(
                   onPressed: openBook,
                   style: FilledButton.styleFrom(
-                      backgroundColor: c.primary,
-                      foregroundColor: c.onPrimary,
+                      backgroundColor: AppTheme.actionColor(c),
+                      foregroundColor: AppTheme.onActionColor(c),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
                       shape: RoundedRectangleBorder(
