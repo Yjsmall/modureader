@@ -1,15 +1,18 @@
 import 'package:anx_reader/dao/sentence_context.dart';
 import 'package:anx_reader/l10n/modu_strings.dart';
 import 'package:anx_reader/models/sentence_context.dart';
+import 'package:anx_reader/service/ai/sentence_context_notes.dart';
 import 'package:anx_reader/widgets/home_navigation_metrics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 class SentenceContextsPage extends StatefulWidget {
-  const SentenceContextsPage({super.key, this.controller, this.dao});
+  const SentenceContextsPage(
+      {super.key, this.controller, this.dao, this.notesService});
   final ScrollController? controller;
   final SentenceContextDao? dao;
+  final SentenceContextNotesService? notesService;
 
   @override
   State<SentenceContextsPage> createState() => _SentenceContextsPageState();
@@ -96,6 +99,7 @@ class _SentenceContextsPageState extends State<SentenceContextsPage> {
                           builder: (_) => SentenceContextCardsPage(
                             document: document,
                             dao: dao,
+                            notesService: widget.notesService,
                           ),
                         ),
                       );
@@ -115,9 +119,11 @@ class SentenceContextCardsPage extends StatefulWidget {
     super.key,
     required this.document,
     required this.dao,
+    this.notesService,
   });
   final SentenceContextDocument document;
   final SentenceContextDao dao;
+  final SentenceContextNotesService? notesService;
 
   @override
   State<SentenceContextCardsPage> createState() =>
@@ -125,10 +131,35 @@ class SentenceContextCardsPage extends StatefulWidget {
 }
 
 class _SentenceContextCardsPageState extends State<SentenceContextCardsPage> {
+  SentenceContextNotesService get notesService =>
+      widget.notesService ?? sentenceContextNotesService;
   late Future<List<SentenceContext>> _sentences = widget.dao.sentences(
     widget.document.bookId,
   );
   final _deleting = <int>{};
+
+  @override
+  void initState() {
+    super.initState();
+    notesService.addListener(_reload);
+  }
+
+  @override
+  void didUpdateWidget(covariant SentenceContextCardsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.notesService != widget.notesService) {
+      (oldWidget.notesService ?? sentenceContextNotesService)
+          .removeListener(_reload);
+      notesService.addListener(_reload);
+    }
+  }
+
+  @override
+  void dispose() {
+    notesService.removeListener(_reload);
+    super.dispose();
+  }
+
   void _reload() => setState(() {
         _sentences = widget.dao.sentences(widget.document.bookId);
       });
@@ -210,6 +241,52 @@ class _SentenceContextCardsPageState extends State<SentenceContextCardsPage> {
                               .bodyLarge
                               ?.copyWith(height: 1.6),
                         ),
+                        const SizedBox(height: 16),
+                        const Divider(),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text('Notes',
+                              style: Theme.of(context).textTheme.titleSmall),
+                        ),
+                        if (sentence.notes.isNotEmpty)
+                          SelectableText(sentence.notes,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(height: 1.6))
+                        else if (notesService.isAnalyzing(sentence.id))
+                          Semantics(
+                            liveRegion: true,
+                            child: Text(ModuStrings.text(
+                                context,
+                                'AI 正在解释词义并分析句子…',
+                                'AI is explaining the word and analyzing the sentence…')),
+                          )
+                        else ...[
+                          Text(notesService.hasFailed(sentence.id)
+                              ? ModuStrings.text(context, '分析失败，句子已保留，请重试。',
+                                  'Analysis failed. Your sentence is saved. Please retry.')
+                              : ModuStrings.text(context, '使用 AI 解释语境词义并分析句子。',
+                                  'Use AI to explain the word in context and analyze the sentence.')),
+                          if (notesService.isAvailable)
+                            TextButton.icon(
+                              onPressed: _deleting.contains(sentence.id)
+                                  ? null
+                                  : () => notesService.generate(sentence),
+                              icon: const Icon(Icons.auto_awesome_outlined),
+                              label: Text(ModuStrings.text(
+                                  context,
+                                  notesService.hasFailed(sentence.id)
+                                      ? '重试分析'
+                                      : '生成分析',
+                                  notesService.hasFailed(sentence.id)
+                                      ? 'Retry analysis'
+                                      : 'Generate analysis')),
+                            )
+                          else
+                            Text(ModuStrings.text(context, '请先在设置中配置 AI 服务。',
+                                'Configure an AI service in Settings first.')),
+                        ],
                         const SizedBox(height: 16),
                         if (sentence.chapter.isNotEmpty)
                           Text(

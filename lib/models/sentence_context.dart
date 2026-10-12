@@ -9,11 +9,12 @@ class SentenceContext {
     required this.cfi,
     required this.chapter,
     required this.createdAt,
+    this.notes = '',
   });
 
   final int? id;
   final int bookId;
-  final String bookTitle, author, word, sentence, cfi, chapter;
+  final String bookTitle, author, word, sentence, cfi, chapter, notes;
   final DateTime createdAt;
 
   Map<String, Object?> toDb() => {
@@ -26,6 +27,7 @@ class SentenceContext {
         'cfi': cfi,
         'chapter': chapter,
         'create_time': createdAt.toIso8601String(),
+        'notes': notes,
       };
 
   factory SentenceContext.fromDb(Map<String, dynamic> row) => SentenceContext(
@@ -38,6 +40,20 @@ class SentenceContext {
         cfi: row['cfi'] as String,
         chapter: row['chapter'] as String,
         createdAt: DateTime.parse(row['create_time'] as String),
+        notes: row['notes'] as String? ?? '',
+      );
+
+  SentenceContext withNotes(String value) => SentenceContext(
+        id: id,
+        bookId: bookId,
+        bookTitle: bookTitle,
+        author: author,
+        word: word,
+        sentence: sentence,
+        cfi: cfi,
+        chapter: chapter,
+        createdAt: createdAt,
+        notes: value,
       );
 }
 

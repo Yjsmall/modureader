@@ -35,6 +35,33 @@ class SentenceContextDao extends BaseDao {
         ),
       );
 
+  Future<SentenceContext?> find(SentenceContext sentence) => querySingle(
+        'tb_sentence_contexts',
+        mapper: SentenceContext.fromDb,
+        where: 'book_id = ? AND chapter = ? AND sentence = ?',
+        whereArgs: [sentence.bookId, sentence.chapter, sentence.sentence],
+      );
+
+  /// A late model response may update the saved card, but never recreate a
+  /// deleted card or replace notes written since the request began.
+  Future<bool> saveNotes(SentenceContext sentence, String notes) async {
+    if (sentence.id == null || notes.trim().isEmpty) {
+      throw ArgumentError('A saved sentence and nonempty notes are required');
+    }
+    return await update(
+          'tb_sentence_contexts',
+          {'notes': notes.trim()},
+          where: 'id = ? AND word = ? AND sentence = ? AND notes = ?',
+          whereArgs: [
+            sentence.id,
+            sentence.word,
+            sentence.sentence,
+            sentence.notes
+          ],
+        ) ==
+        1;
+  }
+
   Future<List<SentenceContext>> sentences(int bookId) => queryList(
         'tb_sentence_contexts',
         mapper: SentenceContext.fromDb,

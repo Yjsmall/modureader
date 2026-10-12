@@ -48,6 +48,9 @@ Stream<String> aiGenerateStream(
   AiProvider? providerOverride,
   bool regenerate = false,
   bool useAgent = false,
+  // Background persistence must receive failures, not save chat error messages
+  // as successful model answers. Existing chat keeps its display behavior.
+  bool throwOnError = false,
   Set<String>? allowedToolIds,
   WidgetRef? ref,
   CancelableLangchainRunner? requestRunner,
@@ -72,6 +75,7 @@ Stream<String> aiGenerateStream(
               providerOverride: providerOverride,
               regenerate: regenerate,
               useAgent: useAgent,
+              throwOnError: throwOnError,
               allowedToolIds: allowedToolIds,
               registry: registry)
           .listen(controller.add, onError: controller.addError, onDone: () {
@@ -97,6 +101,7 @@ Stream<String> _generateStream({
   AiProvider? providerOverride,
   required bool regenerate,
   required bool useAgent,
+  required bool throwOnError,
   Set<String>? allowedToolIds,
   required LangchainAiRegistry registry,
 }) async* {
@@ -111,6 +116,7 @@ Stream<String> _generateStream({
     try {
       final apiKey = AiKeyRotator.getNextKey(providerOverride);
       if (apiKey == null) {
+        if (throwOnError) throw StateError('AI service not configured');
         yield _notConfiguredMessage();
         return;
       }
@@ -139,8 +145,10 @@ Stream<String> _generateStream({
           _providerContextTurns(providerOverride),
         ),
         useAgent: useAgent,
+        throwOnError: throwOnError,
       );
     } catch (error, stack) {
+      if (throwOnError) rethrow;
       final mapped = _mapError(error);
       AnxLog.severe('AI provider test error: $mapped\n$stack');
       yield mapped;
@@ -195,6 +203,7 @@ Stream<String> _generateStream({
                 _providerContextTurns(provider),
               ),
               useAgent: useAgent,
+              throwOnError: throwOnError,
               onFinished: (value) => successful = value,
             );
 
@@ -207,9 +216,11 @@ Stream<String> _generateStream({
             return;
           }
         }
+        if (throwOnError) throw StateError('AI service not configured');
         yield _notConfiguredMessage();
         return;
       } catch (e) {
+        if (throwOnError) rethrow;
         AnxLog.warning('Failed to use configured AI provider: $e');
         yield _mapError(e);
         return;
@@ -275,6 +286,7 @@ Stream<String> _generateStream({
                 _providerContextTurns(provider),
               ),
               useAgent: useAgent,
+              throwOnError: throwOnError,
               onFinished: (value) => successful = value,
             );
 
@@ -292,10 +304,12 @@ Stream<String> _generateStream({
             return;
           }
         }
+        if (throwOnError) throw StateError('AI service not configured');
         yield _notConfiguredMessage();
         return;
       }
     } catch (e) {
+      if (throwOnError) rethrow;
       AnxLog.warning('Failed to use configured no-ref AI provider: $e');
       yield _mapError(e);
       return;
@@ -307,6 +321,7 @@ Stream<String> _generateStream({
   final savedConfig = Prefs().getAiConfig(selectedIdentifier);
   if (savedConfig.isEmpty &&
       (overrideConfig == null || overrideConfig.isEmpty)) {
+    if (throwOnError) throw StateError('AI service not configured');
     final context = navigatorKey.currentContext;
     if (context != null) {
       yield L10n.of(context).aiServiceNotConfigured;
@@ -348,6 +363,7 @@ Stream<String> _generateStream({
       Prefs().aiContextTurns,
     ),
     useAgent: useAgent,
+    throwOnError: throwOnError,
   );
 }
 
@@ -388,6 +404,7 @@ Stream<String> _executeStream({
   required LangchainPipeline pipeline,
   required List<ChatMessage> sanitizedMessages,
   required bool useAgent,
+  bool throwOnError = false,
   void Function(bool successful)? onFinished,
 }) async* {
   var successful = false;
@@ -434,6 +451,7 @@ Stream<String> _executeStream({
     }
     successful = !runner.isCancelled;
   } catch (error, stack) {
+    if (throwOnError) rethrow;
     final mapped = _mapError(error);
     AnxLog.severe('AI error: $mapped\n$stack');
     yield mapped;

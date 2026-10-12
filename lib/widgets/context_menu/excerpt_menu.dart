@@ -1,7 +1,7 @@
 import 'package:anx_reader/utils/app_motion.dart';
 import 'package:anx_reader/config/shared_preference_provider.dart';
 import 'package:anx_reader/dao/book_note.dart';
-import 'package:anx_reader/dao/sentence_context.dart';
+import 'package:anx_reader/service/ai/sentence_context_notes.dart';
 import 'package:anx_reader/models/sentence_context.dart';
 import 'package:anx_reader/l10n/generated/L10n.dart';
 import 'package:anx_reader/l10n/modu_strings.dart';
@@ -417,7 +417,7 @@ class ExcerptMenuState extends State<ExcerptMenu> {
           createdAt: DateTime.now(),
         );
         try {
-          final added = await sentenceContextDao.collect(entry);
+          final added = await sentenceContextNotesService.collect(entry);
           AnxToast.show(added ? savedMessage : duplicateMessage);
           if (mounted) widget.onClose();
         } catch (_) {

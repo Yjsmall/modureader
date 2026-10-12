@@ -271,4 +271,43 @@ void main() {
     final db = await DBHelper().initDB();
     expect(await db.getVersion(), currentDbVersion);
   });
+
+  test(
+      'version 9 migration preserves collected sentences and adds durable notes',
+      () async {
+    await Directory('${root.path}/databases').create(recursive: true);
+    final legacy = await databaseFactoryFfi.openDatabase(getPath(),
+        options: OpenDatabaseOptions(
+            version: 9,
+            onCreate: (db, _) => db.execute(createSentenceContextSQL)));
+    final sentence = SentenceContext(
+        bookId: 1,
+        bookTitle: 'Legacy book',
+        author: 'Author',
+        word: 'bank',
+        sentence: 'She sat on the bank of the river.',
+        cfi: 'legacy-cfi',
+        chapter: 'Chapter 1',
+        createdAt: DateTime(2026, 10, 12));
+    await legacy.insert(
+        'tb_sentence_contexts', sentence.toDb()..remove('notes'));
+    await legacy.close();
+    final upgraded = await DBHelper().database;
+    expect(await upgraded.getVersion(), currentDbVersion);
+    final saved = (await sentenceContextDao.sentences(1)).single;
+    expect(saved.word, 'bank');
+    expect(saved.cfi, 'legacy-cfi');
+    expect(saved.notes, isEmpty);
+    expect(
+        await sentenceContextDao.saveNotes(
+            saved, 'River edge. Sentence analysis.'),
+        true);
+    expect(await sentenceContextDao.saveNotes(saved, 'stale notes'), false);
+    await DBHelper.close();
+    final reopened = (await sentenceContextDao.sentences(1)).single;
+    expect(reopened.notes, 'River edge. Sentence analysis.');
+    await sentenceContextDao.remove(reopened.id!);
+    expect(await sentenceContextDao.saveNotes(reopened, 'late notes'), false);
+    expect(await sentenceContextDao.sentences(1), isEmpty);
+  });
 }

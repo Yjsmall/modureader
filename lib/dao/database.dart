@@ -14,7 +14,7 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // Current app database version
-const int currentDbVersion = 9;
+const int currentDbVersion = 10;
 
 const createSentenceContextSQL = '''
 CREATE TABLE tb_sentence_contexts (
@@ -494,6 +494,10 @@ class DBHelper {
 
     if (oldVersion < 8) await RowSyncStore.install(db);
     if (oldVersion < 9) await db.execute(createSentenceContextSQL);
+    if (oldVersion < 10) {
+      await db.execute(
+          "ALTER TABLE tb_sentence_contexts ADD COLUMN notes TEXT NOT NULL DEFAULT ''");
+    }
 
     if (oldVersion != 0 && Prefs().webdavStatus) {
       updatedDB = true;
