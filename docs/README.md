@@ -45,6 +45,7 @@ Other guides are maintained as a single English edition. Release notes from 1.2.
 - [Issue triage](issue-triage.md)
 - [Testing scope and historical evidence](TESTING.md)
 - [Architecture/source audit](PROJECT_AUDIT.md)
+- [Current interface previews and design notes](design/README.md)
 - [Demo books](examples/README.md) · [Screenshots and artwork](images/README.md)
 - [Upstream attribution](../UPSTREAM.md) · [NOTICE](../NOTICE) · [License](../LICENSE)
 

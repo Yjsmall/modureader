@@ -18,7 +18,7 @@ class ProjectIdentityTest(unittest.TestCase):
             self.assertIn("Anx Reader", text)  # attribution is not stale branding
             self.assertIn("ReadAny", text)
         self.assertIn("默读 · Modu Reader", (ROOT / "README.md").read_text())
-        self.assertIn("## Features", (ROOT / "README_EN.md").read_text())
+        self.assertIn("## Interface preview", (ROOT / "README_EN.md").read_text())
         # The old Chinese URL remains a small compatibility link, not a third
         # independent homepage that can drift out of date.
         redirect = (ROOT / "README_zh.md").read_text()
@@ -26,12 +26,17 @@ class ProjectIdentityTest(unittest.TestCase):
         self.assertIn("(README_EN.md)", redirect)
         self.assertLess(len(redirect), 500)
 
-    def test_homepage_local_links_and_fictional_bookshelf_artwork(self):
+    def test_homepage_local_links_and_current_component_previews(self):
         for name, language in (("README.md", "zh"), ("README_EN.md", "en")):
             text = (ROOT / name).read_text()
             self.assertIn('href="README.md">简体中文', text)
             self.assertIn('href="README_EN.md">English', text)
-            self.assertIn(f"bookshelf-home-{language}.png", text)
+            self.assertIn("docs/design/previews/bookshelf-desktop.png", text)
+            self.assertIn("docs/design/previews/bookshelf-phone-light.png", text)
+            self.assertIn("docs/design/previews/bookshelf-phone-dark.png", text)
+            self.assertNotIn("showcase/cross-platform/", text)
+            self.assertNotIn("t.me/", text)
+            self.assertNotIn("1009765685", text)
             self.assertIn("虚构" if language == "zh" else "fictional", text)
             targets = re.findall(r'\]\(([^)]+)\)|(?:href|src)="([^"]+)"', text)
             for markdown, html in targets:

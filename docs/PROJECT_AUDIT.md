@@ -44,7 +44,7 @@ This cleanup changed main-branch source without moving released tags, overwritin
 
 - Changed the homepage arrangement to English `README.md` and Chinese `README_zh.md`, retaining `README_EN.md` as an old-address redirect and updating identity regressions.
 - Removed 105 old promotional images, historical screenshots and intermediate phone renders, plus 19 obsolete store-image symlinks, from current Git tracking: 67,867,671 bytes (about 64.7 MiB). Local source assets and Git history were retained.
-- Retained the nine then-current `docs/images/showcase/cross-platform/` images, provenance documentation and original example books. The current 33-image set reflects later expansion; it does not change this historical count.
+- Retained the nine then-current `docs/images/showcase/cross-platform/` images, provenance documentation and original example books. The set was later expanded and then removed during the current interface-preview cleanup; this does not change the historical count.
 - Retained PDF/EPUB regression fixtures, reader build resources used by the app, runtimes referenced by Windows build scripts, third-party dependencies and all licenses.
 - The then-tracked tree showed no APK/AAB/IPA/DMG installers, crash dumps, build-cache directories or common private-key/token-pattern matches. This was file/pattern screening, not a complete history or binary-secret audit.
 - Added ignore rules for retired assets and installer/diagnostic files without rewriting Git history or deleting releases, tags, branches or the local library.
