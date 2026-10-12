@@ -25,7 +25,6 @@ import 'package:anx_reader/page/settings_page/ocr_model.dart';
 import 'package:anx_reader/utils/env_var.dart';
 import 'package:anx_reader/widgets/settings/about.dart';
 import 'package:flutter/material.dart';
-import 'package:icons_plus/icons_plus.dart';
 
 class MoreSettings extends StatelessWidget {
   const MoreSettings({super.key});
@@ -70,7 +69,6 @@ class SubMoreSettings extends StatefulWidget {
 
 class _SubMoreSettingsState extends State<SubMoreSettings> {
   int selectedIndex = 0;
-  Widget? settingsDetail;
 
   @override
   void didChangeDependencies() {
@@ -116,7 +114,7 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
               },
               {
                 "title": L10n.of(context).settingsReading,
-                "icon": Icons.book_rounded,
+                "icon": Icons.menu_book_outlined,
                 "sections": const ReadingSettings(),
                 "subtitles": [
                   L10n.of(context).readingPageReading,
@@ -166,7 +164,7 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
               if (EnvVar.enableAIFeature)
                 {
                   "title": L10n.of(context).settingsAi,
-                  "icon": Icons.auto_awesome,
+                  "icon": Icons.auto_awesome_outlined,
                   "sections": const AISettings(),
                   "subtitles": [
                     L10n.of(context).settingsAiServices,
@@ -207,7 +205,7 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
               },
               {
                 "title": L10n.of(context).settingsNarrate,
-                "icon": EvaIcons.headphones,
+                "icon": Icons.headphones_outlined,
                 "sections": const NarrateSettings(),
                 "subtitles": [
                   L10n.of(context).settingsNarrateVoice,
@@ -285,36 +283,84 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
               },
             ];
 
-            settingsDetail ??= SettingsPageBody(
+            final settingsDetail = SettingsPageBody(
+              key: ValueKey(selectedIndex),
               isMobile: false,
-              title: settings[0]["title"],
-              sections: settings[0]["sections"],
+              title: settings[selectedIndex]['title'],
+              titleBuilder: settings[selectedIndex]['titleBuilder'],
+              sections: settings[selectedIndex]['sections'],
+              description:
+                  (settings[selectedIndex]['subtitles'] as List<String>)
+                      .join(' · '),
             );
 
             void setDetail(Widget detail, int id) {
-              setState(() {
-                settingsDetail = detail;
-                selectedIndex = id;
-              });
+              setState(() => selectedIndex = id);
             }
 
             Widget settingsList(bool isMobile, bool showDeveloper) {
+              final categories = <(String, String, bool Function(Widget))>[
+                (
+                  '阅读与外观',
+                  'Reading & appearance',
+                  (page) =>
+                      page is AppearanceSetting ||
+                      page is ReadingSettings ||
+                      page is CssSettings ||
+                      page is DictionarySettings ||
+                      page is SelectionSearchSettings ||
+                      page is SelectionToolbarSettings
+                ),
+                (
+                  '智能辅助',
+                  'Reading assistance',
+                  (page) =>
+                      page is AISettings ||
+                      page is AiReadingSkillsSettings ||
+                      page is VectorModelSettings ||
+                      page is OcrModelSettings ||
+                      page is NarrateSettings ||
+                      page is TranslateSetting
+                ),
+                (
+                  '书库与数据',
+                  'Library & data',
+                  (page) =>
+                      page is SyncSetting ||
+                      page is GlobalSettingsPage ||
+                      page is RemoteLibrarySettings ||
+                      page is StorageSettings
+                ),
+                (
+                  '支持与关于',
+                  'Support & about',
+                  (page) => page is AdvancedSetting || page is BugReportSettings
+                ),
+              ];
               final children = <Widget>[
-                for (int index = 0; index < settings.length; index++)
-                  SettingsPageBuilder(
-                    isMobile: isMobile,
-                    id: index,
-                    selectedIndex: selectedIndex,
-                    setDetail: setDetail,
-                    icon: Icon(
-                      settings[index]["icon"],
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    title: settings[index]["title"],
-                    titleBuilder: settings[index]["titleBuilder"],
-                    sections: settings[index]["sections"],
-                    subTitles: settings[index]["subtitles"],
+                for (final (zh, en, matches) in categories) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 24, 12, 8),
+                    child: Text(ModuStrings.text(context, zh, en),
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant)),
                   ),
+                  for (int index = 0; index < settings.length; index++)
+                    if (matches(settings[index]['sections'] as Widget))
+                      SettingsPageBuilder(
+                        isMobile: isMobile,
+                        id: index,
+                        selectedIndex: selectedIndex,
+                        setDetail: setDetail,
+                        icon: Icon(settings[index]['icon']),
+                        title: settings[index]['title'],
+                        titleBuilder: settings[index]['titleBuilder'],
+                        sections: settings[index]['sections'],
+                        subTitles: settings[index]['subtitles'],
+                      ),
+                ],
                 if (showDeveloper)
                   ListTile(
                     leading: Icon(Icons.developer_mode,
@@ -335,8 +381,11 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
 
               return ListView(
                 controller: widget.controller,
-                padding: EdgeInsets.only(
-                    bottom: widget.bottomContentInset > 0
+                padding: EdgeInsets.fromLTRB(
+                    isMobile ? 24 : 12,
+                    0,
+                    isMobile ? 24 : 12,
+                    widget.bottomContentInset > 0
                         ? widget.bottomContentInset
                         : MediaQuery.paddingOf(context).bottom),
                 children: children,
@@ -344,18 +393,24 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
             }
 
             if (constraints.maxWidth > 600) {
-              return Row(
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: settingsList(false, showDeveloperEntry),
-                  ),
-                  const VerticalDivider(thickness: 1, width: 1),
-                  Expanded(
-                    flex: 2,
-                    child: settingsDetail!,
-                  ),
-                ],
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Material(
+                  key: const ValueKey('settings-workspace'),
+                  color: Theme.of(context).colorScheme.surfaceContainer,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                          color: Theme.of(context).colorScheme.outlineVariant)),
+                  clipBehavior: Clip.antiAlias,
+                  child: Row(children: [
+                    SizedBox(
+                        width: constraints.maxWidth >= 1000 ? 264 : 232,
+                        child: settingsList(false, showDeveloperEntry)),
+                    const VerticalDivider(thickness: 1, width: 1),
+                    Expanded(child: settingsDetail),
+                  ]),
+                ),
               );
             } else {
               return settingsList(true, showDeveloperEntry);

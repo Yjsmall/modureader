@@ -39,6 +39,7 @@ class SettingsPageBuilder extends StatelessWidget {
         titleBuilder: titleBuilder,
         isMobile: isMobile,
         sections: sections,
+        description: subTitles.join(' · '),
       ),
       subtitle: subTitles,
     );
@@ -52,12 +53,14 @@ class SettingsPageBody extends StatefulWidget {
     this.titleBuilder,
     required this.isMobile,
     required this.sections,
+    this.description,
   });
 
   final String title;
   final String Function(BuildContext)? titleBuilder;
   final bool isMobile;
   final Widget sections;
+  final String? description;
 
   @override
   State<SettingsPageBody> createState() => _SettingsPageBodyState();
@@ -69,7 +72,43 @@ class _SettingsPageBodyState extends State<SettingsPageBody> {
     // Register the locale dependency on this page, not on the cached sliver
     // callback, so an already-open page refreshes its navigation title.
     final title = widget.titleBuilder?.call(context) ?? widget.title;
+    if (!widget.isMobile) {
+      final theme = Theme.of(context);
+      return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 920),
+              child: Column(
+                key: const ValueKey('settings-detail-panel'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 24),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(title, style: theme.textTheme.titleLarge),
+                          if (widget.description?.isNotEmpty == true) ...[
+                            const SizedBox(height: 8),
+                            Text(widget.description!,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant)),
+                          ],
+                        ]),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                      child: MediaQuery.removePadding(
+                    removeTop: true,
+                    context: context,
+                    child: widget.sections,
+                  )),
+                ],
+              )));
+    }
     return CupertinoPageScaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       child: NestedScrollView(
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return widget.isMobile

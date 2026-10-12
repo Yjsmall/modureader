@@ -24,7 +24,6 @@ class SettingsSection extends AbstractSettingsSection {
   }
 
   Widget buildSectionBody(BuildContext context) {
-    const scaleFactor = 0.5;
     final tileList = buildTileList();
 
     if (title == null) {
@@ -36,20 +35,22 @@ class SettingsSection extends AbstractSettingsSection {
       children: [
         Padding(
           padding: const EdgeInsetsDirectional.only(
-            top: 24 * scaleFactor,
-            bottom: 10 * scaleFactor,
-            start: 24,
-            end: 24,
+            top: 24,
+            bottom: 12,
+            start: 16,
+            end: 16,
           ),
           child: DefaultTextStyle(
-            style: TextStyle(
-              color: Theme.of(context).primaryColor,
-            ),
+            style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
             child: title!,
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding:
+              margin ?? const EdgeInsetsDirectional.symmetric(horizontal: 16),
           child: FilledContainer(
             padding: EdgeInsetsGeometry.zero,
             child: tileList,

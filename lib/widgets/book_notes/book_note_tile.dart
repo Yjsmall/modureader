@@ -33,25 +33,22 @@ class BookNoteTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor = Color(int.tryParse('0xaa${note.color}') ?? 0xaa555555);
-    final infoStyle = const TextStyle(
-      fontSize: 14,
-      color: Colors.grey,
-    );
+    final infoStyle = Theme.of(context).textTheme.bodySmall!;
 
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
       onSecondaryTap: onLongPress,
-      behavior: HitTestBehavior.opaque,
+      borderRadius: BorderRadius.circular(16),
       child: FilledContainer(
         color: backgroundColor,
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(16),
         margin: margin,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
+              padding: const EdgeInsets.only(right: 16, top: 4),
               child: _buildIcon(iconColor),
             ),
             Expanded(
@@ -60,9 +57,7 @@ class BookNoteTile extends StatelessWidget {
                 children: [
                   Text(
                     note.content,
-                    style: const TextStyle(
-                      fontSize: 16,
-                    ),
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   if (note.readerNote != null && note.readerNote!.isNotEmpty)
                     Column(
@@ -80,7 +75,9 @@ class BookNoteTile extends StatelessWidget {
                                 child: Text(
                                   note.readerNote!,
                                   style: infoStyle.copyWith(
-                                    color: Colors.grey.shade600,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -93,7 +90,7 @@ class BookNoteTile extends StatelessWidget {
                   Divider(
                     indent: 4,
                     height: 3,
-                    color: Colors.grey.shade300,
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

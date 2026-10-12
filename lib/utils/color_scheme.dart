@@ -1,5 +1,6 @@
 import 'package:anx_reader/config/shared_preference_provider.dart';
 import 'package:chinese_font_library/chinese_font_library.dart';
+import 'package:anx_reader/theme/app_theme.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:anx_reader/utils/app_motion.dart';
@@ -9,54 +10,17 @@ ThemeData colorSchema(
   BuildContext context,
   Brightness brightness,
 ) {
-  brightness = prefsNotifier.eInkMode
-      ? Brightness.light
-      : switch (prefsNotifier.themeMode) {
-          ThemeMode.light => Brightness.light,
-          ThemeMode.dark => Brightness.dark,
-          ThemeMode.system => MediaQuery.platformBrightnessOf(context),
-        };
-  Color seedColor = prefsNotifier.themeColor;
-  final isDark = brightness == Brightness.dark;
+  if (prefsNotifier.eInkMode) brightness = Brightness.light;
   final isEinkMode = prefsNotifier.eInkMode;
-  final disableMotion = prefsNotifier.eInkMotionDisabled;
-
-  final lightGropedBackground = const Color(0xFFF2F2F7);
-  final darkGropedBackground =
-      prefsNotifier.trueDarkMode ? Color(0xFF000000) : Color(0xFF1C1C1E);
-  final gropedBackgroundColor = isEinkMode
-      ? Colors.white
-      : isDark
-          ? darkGropedBackground
-          : lightGropedBackground;
-
-  final colorScheme = isEinkMode
-      ? const ColorScheme.light(
-          primary: Colors.black,
-          onPrimary: Colors.white,
-          primaryContainer: Colors.grey,
-          onPrimaryContainer: Colors.black,
-          secondary: Colors.grey,
-          onSecondary: Colors.white,
-          secondaryContainer: Colors.black12,
-          onSecondaryContainer: Colors.black,
-          surface: Colors.white,
-          onSurface: Colors.black,
-        )
-      : switch (brightness) {
-          Brightness.light => ColorScheme.fromSeed(
-              seedColor: seedColor,
-              brightness: Brightness.light,
-              surfaceContainer: Color(0xFFFFFFFF),
-              surface: lightGropedBackground,
-            ),
-          Brightness.dark => ColorScheme.fromSeed(
-              seedColor: seedColor,
-              brightness: Brightness.dark,
-              surfaceContainer: Color(0xFF2C2C2E),
-              surface: darkGropedBackground,
-            ),
-        };
+  final disableMotion = prefsNotifier.eInkMotionDisabled ||
+      MediaQuery.disableAnimationsOf(context);
+  final colorScheme = AppTheme.scheme(
+    seed: prefsNotifier.themeColor,
+    brightness: brightness,
+    trueBlack: prefsNotifier.trueDarkMode,
+    eink: isEinkMode,
+  );
+  final gropedBackgroundColor = colorScheme.surface;
 
   ThemeData themeData = isEinkMode
       ? FlexThemeData.light(
@@ -77,7 +41,7 @@ ThemeData colorSchema(
             )
         };
 
-  return themeData
+  return AppTheme.apply(themeData, eink: isEinkMode)
       .copyWith(
           pageTransitionsTheme: disableMotion
               ? PageTransitionsTheme(builders: {
@@ -101,7 +65,8 @@ ThemeData colorSchema(
           scaffoldBackgroundColor: gropedBackgroundColor,
           snackBarTheme: SnackBarThemeData(
             behavior: SnackBarBehavior.floating,
-            shape: StadiumBorder(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
                 side: isEinkMode
                     ? const BorderSide(color: Colors.black)
                     : BorderSide.none),
@@ -113,11 +78,7 @@ ThemeData colorSchema(
             closeIconColor: colorScheme.onSurface,
             insetPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
           ),
-          bottomSheetTheme: BottomSheetThemeData()
-              .copyWith(backgroundColor: gropedBackgroundColor),
           drawerTheme: DrawerThemeData()
-              .copyWith(backgroundColor: gropedBackgroundColor),
-          dialogTheme: DialogThemeData()
               .copyWith(backgroundColor: gropedBackgroundColor))
       .useSystemChineseFont(brightness);
 }

@@ -125,8 +125,6 @@ class AndroidSettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const scaleFactor = 0.6;
-
     final cantShowAnimation = tileType == SettingsTileType.switchTile
         ? onToggle == null && onPressed == null
         : onPressed == null;
@@ -163,36 +161,41 @@ class AndroidSettingsTile extends StatelessWidget {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsetsDirectional.only(
-                    start: 10,
-                    end: 8,
-                    bottom: 19 * scaleFactor,
-                    top: 19 * scaleFactor,
+                    start: 16,
+                    end: 16,
+                    bottom: 16,
+                    top: 16,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       DefaultTextStyle(
-                        style: TextStyle(
-                          color: enabled
-                              ? Theme.of(context).textTheme.bodyLarge!.color!
-                              : Theme.of(context).disabledColor,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400,
-                        ),
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                              color: enabled
+                                  ? Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge!
+                                      .color!
+                                  : Theme.of(context).disabledColor,
+                            ),
                         child: title ?? Container(),
                       ),
                       if (value != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 4.0),
                           child: DefaultTextStyle(
-                            style: TextStyle(
-                              color: enabled
-                                  ? Theme.of(context)
-                                      .textTheme
-                                      .bodySmall!
-                                      .color!
-                                  : Theme.of(context).disabledColor,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  color: enabled
+                                      ? Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant
+                                      : Theme.of(context).disabledColor,
+                                ),
                             child: value!,
                           ),
                         )
@@ -200,14 +203,16 @@ class AndroidSettingsTile extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(top: 4.0),
                           child: DefaultTextStyle(
-                            style: TextStyle(
-                              color: enabled
-                                  ? Theme.of(context)
-                                      .textTheme
-                                      .bodySmall!
-                                      .color!
-                                  : Theme.of(context).disabledColor,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  color: enabled
+                                      ? Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant
+                                      : Theme.of(context).disabledColor,
+                                ),
                             child: description!,
                           ),
                         ),

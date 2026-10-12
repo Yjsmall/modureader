@@ -15,7 +15,7 @@ abstract class BaseRoundedContainer extends StatelessWidget {
     this.animationCurve = Curves.easeInOut,
   });
 
-  static const double _defaultRadius = 30;
+  static const double _defaultRadius = 12;
 
   final Widget child;
   final double? width;
@@ -35,18 +35,23 @@ abstract class BaseRoundedContainer extends StatelessWidget {
     final BorderRadiusGeometry borderRadius = _borderRadius;
 
     return AnimatedContainer(
-      duration: AppMotion.duration(animationDuration),
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : AppMotion.duration(animationDuration),
       curve: animationCurve,
-      margin: margin?.add(const EdgeInsets.all(1)) ?? const EdgeInsets.all(1),
+      margin: margin,
       width: width,
       height: height,
       constraints: constraints,
       decoration: decoration(context, borderRadius),
       child: ClipRSuperellipse(
         borderRadius: borderRadius,
-        child: Container(
-          padding: padding,
-          child: child,
+        child: Material(
+          type: MaterialType.transparency,
+          child: Padding(
+            padding: padding ?? EdgeInsets.zero,
+            child: child,
+          ),
         ),
       ),
     );

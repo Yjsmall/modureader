@@ -1,3 +1,6 @@
+import 'package:anx_reader/widgets/bookshelf/bookshelf_caption.dart';
+import 'package:anx_reader/widgets/bookshelf/bookshelf_style.dart';
+import 'package:anx_reader/widgets/bookshelf/continue_reading_card.dart';
 import 'package:anx_reader/utils/app_motion.dart';
 import 'dart:async';
 import 'dart:io';
@@ -25,7 +28,7 @@ import 'package:anx_reader/widgets/bookshelf/book_import_picker.dart';
 import 'package:anx_reader/widgets/bookshelf/book_folder.dart';
 import 'package:anx_reader/widgets/bookshelf/book_selection_actions.dart';
 import 'package:anx_reader/widgets/bookshelf/stop_vectorization_button.dart';
-import 'package:anx_reader/widgets/bookshelf/sync_button.dart';
+import 'package:anx_reader/widgets/bookshelf/sync_status_bottom_sheet.dart';
 import 'package:anx_reader/widgets/common/container/filled_container.dart';
 import 'package:anx_reader/widgets/common/tag_chip.dart';
 import 'package:anx_reader/widgets/common/anx_segmented_button.dart';
@@ -33,7 +36,6 @@ import 'package:anx_reader/widgets/tips/bookshelf_tips.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:icons_plus/icons_plus.dart';
 
 class BookshelfPage extends ConsumerStatefulWidget {
   const BookshelfPage({super.key, this.controller});
@@ -48,7 +50,7 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
   late final _scrollController = widget.controller ?? ScrollController();
   final _gridViewKey = GlobalKey();
   bool _dragging = false;
-  final GlobalKey _tagButtonKey = GlobalKey();
+  final GlobalKey _libraryActionsKey = GlobalKey();
   final TextEditingController _editTagController = TextEditingController();
   final Set<int> _selectedBookIds = <int>{};
   bool _selectionMode = false;
@@ -98,6 +100,13 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    return Theme(
+      data: BookshelfStyle.theme(Theme.of(context), eink: Prefs().eInkMode),
+      child: Builder(builder: _buildShelf),
+    );
+  }
+
+  Widget _buildShelf(BuildContext context) {
     final statusFilter = ref.watch(readingStatusFilterNotifierProvider);
     final selectedTags = ref.watch(tagSelectionProvider);
     final tagsAsync = ref.watch(tagListProvider);
@@ -110,6 +119,12 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
     final selectedBooks = visibleBooks
         .where((book) => _selectedBookIds.contains(book.id))
         .toList(growable: false);
+    final unfinished = visibleBooks
+        .where((book) =>
+            book.readingPercentage > .02 && book.readingPercentage < .98)
+        .toList()
+      ..sort((a, b) => b.updateTime.compareTo(a.updateTime));
+    final continueBook = unfinished.isEmpty ? null : unfinished.first;
 
     void setBookSelected(Book book, bool selected) {
       setState(() {
@@ -129,8 +144,18 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
       });
     }
 
-    Widget buildFilterBar() {
+    VoidCallback? showTagPicker;
+
+    Widget buildFilterBar(Widget viewToggle) {
       final statusChips = [
+        _StatusChip(
+          label: ModuStrings.text(context, '全部书籍', 'All books'),
+          selected: statusFilter == ReadingStatusFilter.none,
+          onTap: () {
+            ref.read(readingStatusFilterNotifierProvider.notifier).clear();
+            ref.read(bookListProvider.notifier).refresh();
+          },
+        ),
         _StatusChip(
           label: L10n.of(context).bookshelfFilterFinished,
           selected: statusFilter == ReadingStatusFilter.finished,
@@ -200,7 +225,7 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
         if (!context.mounted) return;
 
         final renderBox =
-            _tagButtonKey.currentContext?.findRenderObject() as RenderBox?;
+            _libraryActionsKey.currentContext?.findRenderObject() as RenderBox?;
         final overlay =
             Overlay.of(context).context.findRenderObject() as RenderBox?;
         if (renderBox == null || overlay == null) return;
@@ -218,7 +243,7 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
 
         final liveSelected = {...selectedTags};
 
-        final boxMaxWidth = max(MediaQuery.of(context).size.width * 0.8, 500.0);
+        final boxMaxWidth = min(MediaQuery.of(context).size.width - 32, 500.0);
 
         await showMenu<int>(
           popUpAnimationStyle: AppMotion.style,
@@ -312,6 +337,8 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
         );
       }
 
+      showTagPicker = () => unawaited(showTagMenu());
+
       final selectedTagWidgets = tagsAsync.when(
         data: (tags) {
           final tagMap = {for (final t in tags) t.id: t};
@@ -362,86 +389,362 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
       );
 
       return Container(
-        height: 40,
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 5),
+        height: 56 +
+            (MediaQuery.textScalerOf(context).scale(14) - 14)
+                    .clamp(0, double.infinity) *
+                1.4,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
-            const SizedBox(width: 8),
             Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    ...statusChips,
-                    selectedTagWidgets,
-                  ],
-                ),
-              ),
+              child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Material(
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(14),
+                      child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                ...statusChips,
+                                selectedTagWidgets,
+                              ],
+                            ),
+                          )))),
             ),
-            IconButton(
-              key: _tagButtonKey,
-              icon: const Icon(EvaIcons.pricetags_outline, size: 22),
-              tooltip: L10n.of(context).bookshelfFilterTagsTooltip,
-              onPressed: showTagMenu,
-            ),
+            const SizedBox(width: 8),
+            viewToggle,
           ],
         ),
       );
     }
 
+    final viewToggle = IconButton(
+      key: const ValueKey('bookshelf-view-toggle'),
+      tooltip: listMode
+          ? ModuStrings.text(context, '切换为缩略图', 'Switch to thumbnails')
+          : ModuStrings.text(context, '切换为列表', 'Switch to list'),
+      icon: Icon(listMode ? Icons.grid_view : Icons.view_list_outlined),
+      onPressed: () {
+        if (_scrollController.hasClients) _scrollController.jumpTo(0);
+        setState(() => Prefs().bookshelfListMode = !listMode);
+      },
+    );
+
+    final importAction = PopupMenuButton<bool>(
+      popUpAnimationStyle: AppMotion.style,
+      borderRadius: BorderRadius.circular(14),
+      tooltip: ModuStrings.text(context, '导入书籍', 'Import books'),
+      onSelected: (folder) => pickBooksForImport(context, ref, folder: folder),
+      itemBuilder: (context) => [
+        PopupMenuItem(
+            value: false,
+            child: Text(ModuStrings.text(
+                context, '选择文件（可多选）', 'Select files (multiple)'))),
+        PopupMenuItem(
+            value: true,
+            child: Text(ModuStrings.text(context, '导入文件夹', 'Import folder'))),
+      ],
+      child: Ink(
+        decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            borderRadius: BorderRadius.circular(14)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.add,
+                  size: 20, color: Theme.of(context).colorScheme.onPrimary),
+              if (MediaQuery.textScalerOf(context).scale(14) <= 20) ...[
+                const SizedBox(width: 8),
+                Text(ModuStrings.text(context, '导入书籍', 'Import books'),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary)),
+              ],
+            ]),
+          ),
+        ),
+      ),
+    );
+
+    void showSortMenu() {
+      final button =
+          _libraryActionsKey.currentContext?.findRenderObject() as RenderBox?;
+      final overlay =
+          Overlay.of(context).context.findRenderObject() as RenderBox?;
+      if (button == null || overlay == null) return;
+      final anchor = button.localToGlobal(Offset(0, button.size.height),
+          ancestor: overlay);
+      showMenu(
+        popUpAnimationStyle: AppMotion.style,
+        context: context,
+        position: RelativeRect.fromRect(
+            Rect.fromLTWH(anchor.dx, anchor.dy, button.size.width, 0),
+            Offset.zero & overlay.size),
+        items: [
+          for (var sortField in SortFieldEnum.values)
+            PopupMenuItem(
+                child: Text(
+                  sortField.getL10n(context),
+                  style: TextStyle(
+                    color: sortField == Prefs().sortField
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                onTap: () {
+                  Prefs().sortField = sortField;
+                  ref.read(bookListProvider.notifier).refresh();
+                }),
+          PopupMenuItem(
+            enabled: false,
+            child: StatefulBuilder(builder: (_, setState) {
+              return Row(
+                children: [
+                  Expanded(
+                    child: AnxSegmentedButton<SortOrderEnum>(
+                      onSelectionChanged: (value) {
+                        Prefs().sortOrder = value.first;
+                        ref.read(bookListProvider.notifier).refresh();
+                        setState(() {});
+                      },
+                      segments: SortOrderEnum.values
+                          .map(
+                            (e) => SegmentButtonItem(
+                              value: e,
+                              label: e.getL10n(navigatorKey.currentContext!),
+                            ),
+                          )
+                          .toList(),
+                      selected: {Prefs().sortOrder},
+                    ),
+                  ),
+                ],
+              );
+            }),
+          )
+        ],
+      );
+    }
+
+    final libraryActions = PopupMenuButton<String>(
+      key: _libraryActionsKey,
+      tooltip: ModuStrings.text(context, '书架操作', 'Library actions'),
+      icon: const Icon(Icons.more_horiz),
+      onSelected: (action) {
+        switch (action) {
+          case 'select':
+            setState(() {
+              _selectionMode = true;
+              _selectedBookIds.clear();
+            });
+          case 'sync':
+            showSyncStatusBottomSheet(context);
+          case 'sort':
+            showSortMenu();
+          case 'tags':
+            showTagPicker?.call();
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+            value: 'select',
+            enabled: visibleBooks.isNotEmpty,
+            child: Row(children: [
+              const Icon(Icons.checklist_outlined),
+              const SizedBox(width: 12),
+              Text(ModuStrings.text(context, '选择', 'Select'))
+            ])),
+        PopupMenuItem(
+            value: 'sync',
+            child: Row(children: [
+              const Icon(Icons.sync),
+              const SizedBox(width: 12),
+              Text(L10n.of(context).settingsSync)
+            ])),
+        PopupMenuItem(
+            value: 'sort',
+            child: Row(children: [
+              const Icon(Icons.sort),
+              const SizedBox(width: 12),
+              Text(ModuStrings.text(context, '排序', 'Sort'))
+            ])),
+        PopupMenuItem(
+            value: 'tags',
+            child: Row(children: [
+              const Icon(Icons.sell_outlined),
+              const SizedBox(width: 12),
+              Text(ModuStrings.text(context, '标签', 'Tags'))
+            ])),
+      ],
+    );
+
+    final searchField = Material(
+      key: const ValueKey('bookshelf-search'),
+      color: Theme.of(context).colorScheme.surfaceContainer,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant, width: .75),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        dense: true,
+        minTileHeight: 48,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        leading: const Icon(Icons.search),
+        title: Text(L10n.of(context).searchBooksOrNotes,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const SearchPage()),
+        ),
+      ),
+    );
+
+    final libraryHeader = Padding(
+      key: const ValueKey('bookshelf-library-header'),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: LayoutBuilder(builder: (context, constraints) {
+        final heading = Wrap(
+            spacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(ModuStrings.text(context, '收藏的世界', 'Your collection'),
+                  style: Theme.of(context).textTheme.titleMedium),
+              DecoratedBox(
+                  decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(8)),
+                  child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      child: Text(
+                          ModuStrings.format(
+                              context, '{count} 本', '{count} books',
+                              values: {'count': visibleBooks.length}),
+                          style: Theme.of(context).textTheme.bodySmall))),
+            ]);
+        final search = Row(children: [
+          Expanded(child: searchField),
+          const SizedBox(width: 8),
+          libraryActions
+        ]);
+        if (constraints.maxWidth >= 640) {
+          return Row(children: [
+            Expanded(child: heading),
+            const SizedBox(width: 24),
+            SizedBox(width: 360, child: search)
+          ]);
+        }
+        return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [heading, const SizedBox(height: 16), search]);
+      }),
+    );
+
     Widget buildBookshelfBody = booksAsync.when(
       data: (books) {
-        return books.isEmpty
-            ? const Center(child: BookshelfTips())
-            : LayoutBuilder(builder: (context, constraints) {
-                final padding = EdgeInsets.fromLTRB(
-                    20,
-                    12,
-                    20,
-                    12 +
-                        MediaQuery.paddingOf(context).bottom +
-                        HomeNavigationClearance.of(context));
-                Widget buildEntry(int index) {
-                  final group = books[index];
-                  return BookFolder(
-                    key: ValueKey<String>(group.first.groupId == 0
-                        ? 'book:${group.first.id}'
-                        : 'folder:${group.first.groupId}'),
-                    books: group,
-                    listMode: listMode,
-                    selectionMode: _selectionMode,
-                    selectedBookIds: _selectedBookIds,
-                    onSelectionChanged: setBookSelected,
-                  );
-                }
+        return LayoutBuilder(builder: (context, constraints) {
+          const gutter = 16.0;
+          final gap = constraints.maxWidth >= 720 ? 24.0 : 16.0;
+          final bottomInset = 24 +
+              MediaQuery.paddingOf(context).bottom +
+              HomeNavigationClearance.of(context);
+          Widget buildEntry(int index) {
+            final group = books[index];
+            return BookshelfCard(
+                key: ValueKey<String>(group.first.groupId == 0
+                    ? 'card:book:${group.first.id}'
+                    : 'card:folder:${group.first.groupId}'),
+                book: group.first,
+                selected:
+                    group.any((book) => _selectedBookIds.contains(book.id)),
+                child: BookFolder(
+                  key: ValueKey<String>(group.first.groupId == 0
+                      ? 'book:${group.first.id}'
+                      : 'folder:${group.first.groupId}'),
+                  books: group,
+                  listMode: listMode,
+                  selectionMode: _selectionMode,
+                  selectedBookIds: _selectedBookIds,
+                  onSelectionChanged: setBookSelected,
+                ));
+          }
 
-                if (listMode) {
-                  return ListView.separated(
-                    key: const ValueKey('bookshelf-list'),
-                    controller: _scrollController,
-                    padding: padding,
-                    itemCount: books.length,
-                    itemBuilder: (_, index) => buildEntry(index),
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                  );
-                }
-                return GridView(
-                  key: _gridViewKey,
-                  controller: _scrollController,
-                  padding: padding,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount:
-                        max(1, constraints.maxWidth ~/ Prefs().bookCoverWidth),
-                    childAspectRatio: 1 / 2.1,
-                    mainAxisSpacing: 30,
-                    crossAxisSpacing: 20,
-                  ),
-                  children: [
-                    for (var index = 0; index < books.length; index++)
-                      buildEntry(index),
-                  ],
-                );
-              });
+          final preferredWidth = Prefs().bookCoverWidth;
+          final minCoverWidth =
+              constraints.maxWidth < 400 && preferredWidth <= 160
+                  ? min(preferredWidth, 104.0)
+                  : preferredWidth;
+          final columns = MediaQuery.textScalerOf(context).scale(13) > 26
+              ? 1
+              : max(
+                  1,
+                  (constraints.maxWidth - gutter * 2 + gap) ~/
+                      (minCoverWidth + BookshelfStyle.cardPadding * 2 + gap));
+          final itemWidth =
+              (constraints.maxWidth - gutter * 2 - (columns - 1) * gap) /
+                  columns;
+          final textHeight = BookshelfCaption.heightFor(context);
+          return CustomScrollView(
+            key: listMode ? const ValueKey('bookshelf-list') : _gridViewKey,
+            controller: _scrollController,
+            slivers: [
+              if (!_selectionMode &&
+                  !listMode &&
+                  statusFilter == ReadingStatusFilter.none &&
+                  selectedTags.isEmpty &&
+                  continueBook != null)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(gutter, 8, gutter, 24),
+                  sliver: SliverToBoxAdapter(
+                      child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 720),
+                        child: ContinueReadingCard(book: continueBook)),
+                  )),
+                ),
+              if (!_selectionMode) SliverToBoxAdapter(child: libraryHeader),
+              if (!_selectionMode)
+                SliverToBoxAdapter(child: buildFilterBar(viewToggle)),
+              if (books.isEmpty)
+                const SliverFillRemaining(
+                    hasScrollBody: false, child: Center(child: BookshelfTips()))
+              else
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(gutter, 16, gutter, bottomInset),
+                  sliver: listMode
+                      ? SliverList.separated(
+                          itemCount: books.length,
+                          itemBuilder: (_, index) => buildEntry(index),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
+                        )
+                      : SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: columns,
+                            mainAxisExtent:
+                                (itemWidth - BookshelfStyle.cardPadding * 2) *
+                                        1.25 +
+                                    textHeight +
+                                    BookshelfStyle.cardPadding * 2,
+                            mainAxisSpacing: 20,
+                            crossAxisSpacing: gap,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                              (_, index) => buildEntry(index),
+                              childCount: books.length),
+                        ),
+                ),
+            ],
+          );
+        });
       },
       loading: () => const Center(
           child: EinkStaticIndicator(child: CircularProgressIndicator())),
@@ -449,8 +752,8 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
     );
 
     Widget body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (!_selectionMode) buildFilterBar(),
         if (_selectionMode)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -491,7 +794,7 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            EvaIcons.arrowhead_down_outline,
+                            Icons.file_download_outlined,
                             size: 48,
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
@@ -511,43 +814,27 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
     );
 
     PreferredSizeWidget appBar = AppBar(
-      forceMaterialTransparency: true,
+      titleSpacing: 32,
+      toolbarHeight: 80 +
+          (MediaQuery.textScalerOf(context).scale(24) - 24)
+              .clamp(0, double.infinity) +
+          (MediaQuery.textScalerOf(context).scale(12) - 12)
+              .clamp(0, double.infinity),
       title: _selectionMode
           ? Text(ModuStrings.format(
               context, '已选 {count} 本', '{count} books selected',
               values: {'count': selectedBooks.length}))
-          : Container(
-              height: 34,
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const SearchPage(),
-                    ),
-                  );
-                },
-                child: FilledContainer(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  color: Theme.of(context).colorScheme.surface.withAlpha(80),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.search, color: Colors.grey),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          L10n.of(context).searchBooksOrNotes,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(color: Theme.of(context).hintColor),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(L10n.of(context).navBarBookshelf),
+                const SizedBox(height: 4),
+                Text(
+                    ModuStrings.format(context, '{count} 本藏书', '{count} books',
+                        values: {'count': visibleBooks.length}),
+                    style: Theme.of(context).textTheme.bodySmall),
+              ],
             ),
       actions: _selectionMode
           ? [
@@ -579,107 +866,9 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
               ),
             ]
           : [
-              if (visibleBooks.isNotEmpty)
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectionMode = true;
-                      _selectedBookIds.clear();
-                    });
-                  },
-                  child: Text(ModuStrings.text(context, '选择', 'Select')),
-                ),
-              const SyncButton(),
-              IconButton(
-                key: const ValueKey('bookshelf-view-toggle'),
-                tooltip: listMode
-                    ? ModuStrings.text(
-                        context, '切换为缩略图', 'Switch to thumbnails')
-                    : ModuStrings.text(context, '切换为列表', 'Switch to list'),
-                icon:
-                    Icon(listMode ? Icons.grid_view : Icons.view_list_outlined),
-                onPressed: () {
-                  if (_scrollController.hasClients) _scrollController.jumpTo(0);
-                  setState(() => Prefs().bookshelfListMode = !listMode);
-                },
-              ),
-              PopupMenuButton<bool>(
-                popUpAnimationStyle: AppMotion.style,
-                icon: const Icon(Icons.add),
-                tooltip: ModuStrings.text(context, '导入书籍', 'Import books'),
-                onSelected: (folder) =>
-                    pickBooksForImport(context, ref, folder: folder),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                      value: false,
-                      child: Text(ModuStrings.text(
-                          context, '选择文件（可多选）', 'Select files (multiple)'))),
-                  PopupMenuItem(
-                      value: true,
-                      child: Text(
-                          ModuStrings.text(context, '导入文件夹', 'Import folder'))),
-                ],
-              ),
-              IconButton(
-                  icon: const Icon(Icons.sort),
-                  onPressed: () {
-                    showMenu(
-                      popUpAnimationStyle: AppMotion.style,
-                      context: context,
-                      position: RelativeRect.fromLTRB(
-                        MediaQuery.of(context).size.width,
-                        MediaQuery.of(context).padding.top + kToolbarHeight,
-                        0.0,
-                        0.0,
-                      ),
-                      items: [
-                        for (var sortField in SortFieldEnum.values)
-                          PopupMenuItem(
-                              child: Text(
-                                sortField.getL10n(context),
-                                style: TextStyle(
-                                  color: sortField == Prefs().sortField
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(context).colorScheme.onSurface,
-                                ),
-                              ),
-                              onTap: () {
-                                Prefs().sortField = sortField;
-                                ref.read(bookListProvider.notifier).refresh();
-                              }),
-                        PopupMenuItem(
-                          enabled: false,
-                          child: StatefulBuilder(builder: (_, setState) {
-                            return Row(
-                              children: [
-                                Expanded(
-                                  child: AnxSegmentedButton<SortOrderEnum>(
-                                    onSelectionChanged: (value) {
-                                      Prefs().sortOrder = value.first;
-                                      ref
-                                          .read(bookListProvider.notifier)
-                                          .refresh();
-                                      setState(() {});
-                                    },
-                                    segments: SortOrderEnum.values
-                                        .map(
-                                          (e) => SegmentButtonItem(
-                                            value: e,
-                                            label: e.getL10n(
-                                                navigatorKey.currentContext!),
-                                          ),
-                                        )
-                                        .toList(),
-                                    selected: {Prefs().sortOrder},
-                                  ),
-                                ),
-                              ],
-                            );
-                          }),
-                        )
-                      ],
-                    );
-                  }),
+              Padding(
+                  padding: const EdgeInsets.only(right: 32),
+                  child: importAction)
             ],
     );
 
@@ -688,25 +877,17 @@ class BookshelfPageState extends ConsumerState<BookshelfPage>
         onPopInvokedWithResult: (didPop, result) {
           if (!didPop && _selectionMode) exitSelectionMode();
         },
-        child: Container(
-            decoration: Prefs().eInkMode
-                ? null
-                : BoxDecoration(
-                    gradient: RadialGradient(
-                      tileMode: TileMode.clamp,
-                      center: Alignment.topRight,
-                      radius: 1,
-                      colors: [
-                        Theme.of(context).colorScheme.primary.withAlpha(5),
-                        Theme.of(context).scaffoldBackgroundColor,
-                      ],
-                    ),
-                  ),
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
-              appBar: appBar,
-              body: body,
-            )));
+        child: Scaffold(
+          appBar: appBar,
+          body: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Material(
+              key: const ValueKey('bookshelf-workspace'),
+              color: Theme.of(context).colorScheme.surface,
+              child: body,
+            ),
+          ),
+        ));
   }
 }
 
@@ -723,16 +904,24 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        labelPadding: const EdgeInsets.all(0),
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => onTap(),
-        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-        checkmarkColor: Theme.of(context).colorScheme.primary,
+    final theme = Theme.of(context);
+    return Semantics(
+      selected: selected,
+      child: TextButton(
+        onPressed: onTap,
+        style: TextButton.styleFrom(
+          foregroundColor: selected
+              ? theme.colorScheme.onSurface
+              : theme.colorScheme.onSurfaceVariant,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          backgroundColor: selected
+              ? theme.colorScheme.surfaceContainer
+              : Colors.transparent,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          textStyle: theme.chipTheme.labelStyle,
+        ),
+        child: Text(label),
       ),
     );
   }

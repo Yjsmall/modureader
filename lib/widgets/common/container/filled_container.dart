@@ -51,10 +51,10 @@ class FilledContainer extends BaseRoundedContainer {
 
     return buildShapeDecoration(
       color: effectiveColor,
-      borderSide: const BorderSide(
-          color: Colors.transparent,
+      borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
           width: 1,
-          strokeAlign: BorderSide.strokeAlignOutside),
+          strokeAlign: BorderSide.strokeAlignInside),
       borderRadius: borderRadius,
     );
   }

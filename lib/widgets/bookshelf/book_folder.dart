@@ -1,3 +1,5 @@
+import 'package:anx_reader/widgets/bookshelf/bookshelf_caption.dart';
+import 'package:anx_reader/widgets/bookshelf/bookshelf_style.dart';
 import 'package:anx_reader/utils/app_motion.dart';
 import 'package:anx_reader/config/shared_preference_provider.dart';
 import 'package:anx_reader/enums/bookshelf_folder_style.dart';
@@ -288,7 +290,8 @@ class _BookFolderState extends ConsumerState<BookFolder> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      folderPreview,
+                      BookshelfCoverStage(
+                          book: widget.books.first, child: folderPreview),
                       if (widget.selectionMode)
                         Positioned(
                           right: 6,
@@ -339,16 +342,11 @@ class _BookFolderState extends ConsumerState<BookFolder> {
                   ),
                 ),
               ),
-              SizedBox(
-                height: 50,
-                child: Text(
-                  groupName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+              BookshelfCaption(
+                title: groupName,
+                subtitle: ModuStrings.format(
+                    context, '{count} 本书', '{count} books',
+                    values: {'count': widget.books.length}),
               ),
             ],
           ),

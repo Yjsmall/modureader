@@ -1,7 +1,6 @@
 import 'package:anx_reader/l10n/modu_strings.dart';
 import 'package:anx_reader/l10n/app_language.dart';
 import 'dart:async';
-import 'dart:ui';
 import 'package:anx_reader/utils/app_motion.dart';
 import 'package:anx_reader/service/notes/reading_link.dart';
 import 'package:anx_reader/service/notes/open_reading_link.dart';
@@ -29,7 +28,7 @@ import 'package:anx_reader/providers/sync.dart';
 import 'package:anx_reader/config/shared_preference_provider.dart';
 import 'package:anx_reader/utils/toast/common.dart';
 import 'package:anx_reader/widgets/ai/ai_chat_stream.dart';
-import 'package:anx_reader/widgets/common/container/filled_container.dart';
+import 'package:anx_reader/widgets/navigation/app_navigation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 import 'package:anx_reader/widgets/home_navigation_metrics.dart';
@@ -37,7 +36,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 WebViewEnvironment? webViewEnvironment;
@@ -51,8 +49,6 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   String _currentTab = 'bookshelf';
-
-  bool? _expanded;
 
   @override
   void initState() {
@@ -147,7 +143,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final localeKey = appLocaleKey(Localizations.localeOf(context));
     List<Map<String, dynamic>> navBarItems = [
       {
-        'icon': EvaIcons.book_open,
+        'icon': Icons.menu_book_outlined,
         'label': L10n.of(context).navBarBookshelf,
         'identifier': 'bookshelf'
       },
@@ -172,13 +168,13 @@ class _HomePageState extends ConsumerState<HomePage> {
         },
       if (Prefs().bottomNavigatorShowAI && EnvVar.enableAIFeature)
         {
-          'icon': Icons.auto_awesome,
+          'icon': Icons.auto_awesome_outlined,
           'label': L10n.of(context).navBarAI,
           'identifier': 'ai'
         },
       if (Prefs().bottomNavigatorShowNote)
         {
-          'icon': Icons.note,
+          'icon': Icons.edit_note_outlined,
           'label': L10n.of(context).navBarNotes,
           'identifier': 'notes'
         },
@@ -188,7 +184,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         'identifier': 'sentenceContexts'
       },
       {
-        'icon': EvaIcons.settings_2,
+        'icon': Icons.settings_outlined,
         'label': L10n.of(context).navBarSettings,
         'identifier': 'settings'
       },
@@ -236,52 +232,25 @@ class _HomePageState extends ConsumerState<HomePage> {
       });
     }
 
-    List<NavigationRailDestination> railBarItems = navBarItems.map((item) {
-      return NavigationRailDestination(
-        icon: Icon(item['icon'] as IconData),
-        label: Text(item['label'] as String),
-      );
-    }).toList();
-
-    List<BottomNavigationBarItem> bottomBarItems = navBarItems.map((item) {
-      return BottomNavigationBarItem(
-        icon: Icon(item['icon'] as IconData),
-        label: item['label'] as String,
-      );
-    }).toList();
+    final destinations = navBarItems
+        .map((item) => AppDestination(
+              id: item['identifier'] as String,
+              label: item['label'] as String,
+              icon: item['icon'] as IconData,
+            ))
+        .toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        _expanded ??= constraints.maxWidth > 1000;
         if (constraints.maxWidth > 600) {
           return Scaffold(
-            extendBody: true,
             body: Row(
               children: [
-                SafeArea(
-                  bottom: false,
-                  child: FilledContainer(
-                    margin: const EdgeInsets.all(16),
-                    color: ElevationOverlay.applySurfaceTint(
-                      Theme.of(context).colorScheme.surface,
-                      Theme.of(context).colorScheme.primary,
-                      3,
-                    ),
-                    radius: 20,
-                    child: SafeArea(
-                      child: NavigationRail(
-                        groupAlignment: 1,
-                        extended: false,
-                        selectedIndex: currentIndex,
-                        onDestinationSelected: (int index) =>
-                            onBottomTap(index, true),
-                        destinations: railBarItems,
-                        labelType: NavigationRailLabelType.all,
-                        backgroundColor: Colors.transparent,
-                        // elevation: 0,
-                      ),
-                    ),
-                  ),
+                AppNavigationSidebar(
+                  destinations: destinations,
+                  selectedIndex: currentIndex,
+                  onSelected: (index) => onBottomTap(index, true),
+                  extended: constraints.maxWidth >= 1100,
                 ),
                 Expanded(child: pages(currentIndex, constraints, null)),
               ],
@@ -295,10 +264,10 @@ class _HomePageState extends ConsumerState<HomePage> {
           return Scaffold(
             extendBody: true,
             body: BottomBar(
-              duration: AppMotion.duration(const Duration(milliseconds: 120)),
-              width: navBarItems.length > 6
-                  ? (constraints.maxWidth - 32).clamp(0, 390).toDouble()
-                  : 330,
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : AppMotion.duration(const Duration(milliseconds: 180)),
+              width: constraints.maxWidth,
               offset: HomeNavigationMetrics.barOffset,
               body: (_, controller) => HomeNavigationBody(
                 hasBottomBar: !keyboardOpen,
@@ -319,42 +288,12 @@ class _HomePageState extends ConsumerState<HomePage> {
               child: Visibility(
                 visible: !keyboardOpen,
                 maintainState: true,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(32),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(
-                      sigmaX: Prefs().eInkMode ? 0 : 12,
-                      sigmaY: Prefs().eInkMode ? 0 : 12,
-                    ),
-                    child: Container(
-                      height: HomeNavigationMetrics.barHeightFor(context),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainer
-                            .withAlpha(Prefs().eInkMode ? 255 : 100),
-                        borderRadius: BorderRadius.circular(32),
-                        border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withAlpha(Prefs().eInkMode ? 255 : 90),
-                          width: 0.5,
-                        ),
-                      ),
-                      child: BottomNavigationBar(
-                        selectedFontSize: 12,
-                        enableFeedback: false,
-                        type: BottomNavigationBarType.fixed,
-                        landscapeLayout:
-                            BottomNavigationBarLandscapeLayout.linear,
-                        currentIndex: currentIndex,
-                        onTap: (int index) => onBottomTap(index, false),
-                        items: bottomBarItems,
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                      ),
-                    ),
+                child: SizedBox(
+                  height: HomeNavigationMetrics.barHeightFor(context),
+                  child: AppNavigationDock(
+                    destinations: destinations,
+                    selectedIndex: currentIndex,
+                    onSelected: (index) => onBottomTap(index, false),
                   ),
                 ),
               ),

@@ -1,5 +1,4 @@
 import 'package:anx_reader/utils/app_motion.dart';
-import 'package:anx_reader/main.dart';
 import 'package:anx_reader/widgets/settings/settings_section.dart';
 import 'package:flutter/material.dart';
 
@@ -13,24 +12,52 @@ Widget settingsTitle({
   required Widget subPage,
   required List<String> subtitle,
 }) {
-  BuildContext context = navigatorKey.currentContext!;
-  return ListTile(
-    leading: icon,
-    title: Text(title),
-    trailing: const Icon(Icons.chevron_right),
-    selected: !isMobile && selectedIndex == id,
-    subtitle: Text(subtitle.join(' • ')),
-    onTap: () {
-      if (!isMobile) {
-        setDetail(subPage, id);
-        return;
-      }
-      Navigator.push(
-        context,
-        MotionCupertinoPageRoute(builder: (context) => subPage),
-      );
-    },
-  );
+  return Builder(builder: (context) {
+    final c = Theme.of(context).colorScheme;
+    final selected = !isMobile && selectedIndex == id;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Material(
+        color: selected ? c.surfaceContainerHigh : Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide.none,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: 12, vertical: isMobile ? 8 : 0),
+          minLeadingWidth: 22,
+          minTileHeight: isMobile ? 72 : 48,
+          titleAlignment: ListTileTitleAlignment.center,
+          horizontalTitleGap: 12,
+          leading: Icon(icon.icon,
+              color: selected ? c.onSurface : c.onSurfaceVariant, size: 22),
+          title: Text(title),
+          trailing: isMobile
+              ? const Icon(Icons.chevron_right, size: 18)
+              : selected
+                  ? const Icon(Icons.check, size: 18)
+                  : null,
+          selected: selected,
+          subtitle: isMobile
+              ? Text(subtitle.join(' · '),
+                  style: Theme.of(context).textTheme.bodySmall)
+              : null,
+          onTap: () {
+            if (!isMobile) {
+              setDetail(subPage, id);
+              return;
+            }
+            Navigator.push(
+              context,
+              MotionCupertinoPageRoute(builder: (context) => subPage),
+            );
+          },
+        ),
+      ),
+    );
+  });
 }
 
 Widget settingsSections({

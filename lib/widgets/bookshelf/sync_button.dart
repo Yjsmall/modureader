@@ -1,4 +1,5 @@
 import 'package:anx_reader/providers/sync.dart';
+import 'package:anx_reader/l10n/generated/L10n.dart';
 import 'package:anx_reader/widgets/bookshelf/sync_status_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,6 +44,7 @@ class _SyncButtonState extends ConsumerState<SyncButton>
     }
 
     return IconButton(
+      tooltip: L10n.of(context).settingsSync,
       icon: isSyncing && motion
           ? RepaintBoundary(
               child: RotationTransition(

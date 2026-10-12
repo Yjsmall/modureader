@@ -73,15 +73,17 @@ class _NotesPageState extends ConsumerState<NotesPage> {
       fontSize: 24,
       fontWeight: FontWeight.bold,
     );
-    TextStyle textStyle =
-        const TextStyle(fontSize: 18, fontFamily: 'SourceHanSerif');
+    TextStyle textStyle = const TextStyle(
+      fontSize: 18,
+      fontFamily: 'SourceHanSerif',
+    );
 
     return notesStats.when(
       data: (data) {
         return SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(24),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               highlightDigit(
@@ -152,14 +154,12 @@ class _NotesPageState extends ConsumerState<NotesPage> {
     );
     TextStyle titleStyle = const TextStyle(
       overflow: TextOverflow.ellipsis,
-      fontSize: 18,
       fontFamily: 'SourceHanSerif',
+      fontSize: 18,
       fontWeight: FontWeight.bold,
     );
-    TextStyle readingTimeStyle = const TextStyle(
-      fontSize: 14,
-      color: Colors.grey,
-    );
+    TextStyle readingTimeStyle =
+        Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 14);
     return GestureDetector(
       onTap: () {
         if (isMobile) {
@@ -179,8 +179,8 @@ class _NotesPageState extends ConsumerState<NotesPage> {
         }
       },
       child: FilledContainer(
-        margin: const EdgeInsets.only(top: 8, left: 15, right: 15),
-        padding: const EdgeInsets.all(8.0),
+        margin: const EdgeInsets.only(top: 12, left: 24, right: 24),
+        padding: const EdgeInsets.all(16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -203,14 +203,20 @@ class _NotesPageState extends ConsumerState<NotesPage> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        Icon(Icons.access_time, size: 16, color: Colors.grey),
+                        Icon(Icons.access_time,
+                            size: 16,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant),
                         const SizedBox(width: 4),
                         Text(
                           convertSeconds(readingTime),
                           style: readingTimeStyle,
                         ),
                         Text(" | ", style: readingTimeStyle),
-                        Icon(Icons.bar_chart, size: 16, color: Colors.grey),
+                        Icon(Icons.bar_chart,
+                            size: 16,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant),
                         const SizedBox(width: 4),
                         Text(
                           '${(book.readingPercentage * 100).toStringAsFixed(1)}%',
@@ -231,7 +237,7 @@ class _NotesPageState extends ConsumerState<NotesPage> {
                 book: book,
                 height: 130,
                 width: 90,
-                radius: 20,
+                radius: 8,
               ),
             ),
           ],

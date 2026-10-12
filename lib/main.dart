@@ -150,7 +150,7 @@ Future<void> _startConfiguredApp() async {
   );
 
   SmartDialog.config.custom = SmartConfigCustom(
-    maskColor: Colors.black.withAlpha(35),
+    maskColor: Colors.black.withAlpha(96),
     useAnimation: true,
     animationType: SmartAnimationType.centerFade_otherSlide,
   );
@@ -299,7 +299,7 @@ class _MyAppState extends ConsumerState<MyApp>
         builder: (context, prefsNotifier, child) {
           final motion = !prefsNotifier.eInkMotionDisabled;
           SmartDialog.config.custom = SmartConfigCustom(
-              maskColor: Colors.black.withAlpha(35),
+              maskColor: Colors.black.withAlpha(96),
               useAnimation: motion,
               animationType: SmartAnimationType.centerFade_otherSlide);
           SmartDialog.config.attach = SmartConfigAttach(useAnimation: motion);

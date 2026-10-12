@@ -107,6 +107,12 @@ class _SyncStatus extends SyncStatus {
       );
 }
 
+Future<void> enterShelfSelection(WidgetTester tester) async {
+  await tester.tap(find.byTooltip('书架操作'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('选择'));
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory temporary;
@@ -381,7 +387,7 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(360, 800));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await mount(tester, shelf: true);
-      await tester.tap(find.text('选择'));
+      await enterShelfSelection(tester);
       await tester.pumpAndSettle();
       expect(
           tester
@@ -407,7 +413,7 @@ void main() {
       expect(books.moved, [789, 790]);
       expect(createNew ? books.createdName : books.destination,
           createNew ? '批量新建' : 42);
-      expect(find.text('选择'), findsOneWidget);
+      expect(find.byTooltip('书架操作'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }
@@ -434,7 +440,7 @@ void main() {
     final context = tester.element(find.byType(BookshelfPage));
     await Navigator.of(context).maybePop();
     await tester.pumpAndSettle();
-    expect(find.text('选择'), findsOneWidget);
+    expect(find.byTooltip('书架操作'), findsOneWidget);
     expect(find.byTooltip('书籍操作'), findsNothing);
     await openBookMenu(tester);
     expect(actions(tester), BookAction.values);

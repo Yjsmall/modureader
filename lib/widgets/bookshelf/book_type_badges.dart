@@ -87,7 +87,7 @@ class _BookTypeBadgesState extends State<BookTypeBadges> {
                   runSpacing: 4,
                   verticalDirection: VerticalDirection.up,
                   children: [
-                    for (final (label, color) in labels)
+                    for (final (label, _) in labels)
                       ConstrainedBox(
                         constraints:
                             BoxConstraints(maxWidth: constraints.maxWidth),
@@ -96,7 +96,11 @@ class _BookTypeBadgesState extends State<BookTypeBadges> {
                           alignment: Alignment.centerLeft,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: Prefs().eInkMode ? Colors.white : color,
+                              color: Prefs().eInkMode
+                                  ? Colors.white
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainer,
                               borderRadius: BorderRadius.circular(6),
                               border: Prefs().eInkMode
                                   ? Border.all(color: Colors.black)
@@ -109,9 +113,11 @@ class _BookTypeBadgesState extends State<BookTypeBadges> {
                                     style: TextStyle(
                                         color: Prefs().eInkMode
                                             ? Colors.black
-                                            : Colors.white,
-                                        fontSize: 10,
-                                        height: 1.1,
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .onSurface,
+                                        fontSize: 12,
+                                        height: 1.2,
                                         fontWeight: FontWeight.w600))),
                           ),
                         ),

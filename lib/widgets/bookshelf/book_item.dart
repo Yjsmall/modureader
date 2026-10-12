@@ -1,3 +1,5 @@
+import 'package:anx_reader/widgets/bookshelf/bookshelf_caption.dart';
+import 'package:anx_reader/widgets/bookshelf/bookshelf_style.dart';
 import 'package:anx_reader/utils/app_motion.dart';
 import 'package:anx_reader/config/shared_preference_provider.dart';
 import 'package:anx_reader/enums/book_sync_status.dart';
@@ -86,8 +88,8 @@ class _BookItemState extends ConsumerState<BookItem> {
       animation: bookKnowledgeIndexQueue,
       builder: (context, _) {
         final queueItem = bookKnowledgeIndexQueue.itemFor(book.id);
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
+        return InkWell(
+          borderRadius: BorderRadius.circular(8),
           onTap: selectionMode
               ? toggleSelection
               : () => pushToReadingPage(ref, context, book),
@@ -187,157 +189,124 @@ class _BookItemState extends ConsumerState<BookItem> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Hero(
-                        tag: book.coverFullPath,
-                        transitionOnUserGestures: true,
-                        createRectTween: readerCoverRectTween,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              if (!Prefs().eInkMode)
-                                BoxShadow(
-                                  color: Colors.grey.withAlpha(100),
-                                  spreadRadius: 5,
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 2),
-                                ),
-                            ],
-                          ),
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              BookCover(book: book),
-                              Positioned(
-                                left: 8,
-                                right: 40,
-                                bottom: 8,
-                                child: BookTypeBadges(book: book),
+                      child: BookshelfCoverStage(
+                          book: book,
+                          child: Hero(
+                            tag: book.coverFullPath,
+                            transitionOnUserGestures: true,
+                            createRectTween: readerCoverRectTween,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  if (!Prefs().eInkMode)
+                                    BoxShadow(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .shadow
+                                          .withAlpha(18),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                ],
                               ),
-                              FutureBuilder<bool>(
-                                future:
-                                    BookKnowledgeIndexService().hasIndex(book),
-                                builder: (context, snapshot) {
-                                  final indexed = snapshot.data == true ||
-                                      queueItem?.status ==
-                                          BookKnowledgeQueueStatus.completed;
-                                  return Stack(
-                                    children: [
-                                      if (indexed || queueItem != null)
-                                        Positioned(
-                                          left: 8,
-                                          top: 8,
-                                          child: KnowledgeStatusBadge(
-                                            indexed: indexed,
-                                            item: queueItem,
-                                          ),
-                                        ),
-                                      if (selectionMode)
-                                        Positioned(
-                                          right: 7,
-                                          top: 7,
-                                          child: _SelectionIndicator(
-                                            selected: selected,
-                                          ),
-                                        ),
-                                      if (selectionMode)
-                                        Positioned(
-                                          right: 6,
-                                          bottom: 6,
-                                          child: BookBottomSheet(
-                                            book: book,
-                                            menuOnly: true,
-                                            menuKey: menuKey,
-                                            child: DecoratedBox(
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    Colors.black.withAlpha(150),
-                                                shape: BoxShape.circle,
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  BookCover(book: book),
+                                  Positioned(
+                                    left: 8,
+                                    right: 40,
+                                    bottom: 8,
+                                    child: BookTypeBadges(book: book),
+                                  ),
+                                  FutureBuilder<bool>(
+                                    future: BookKnowledgeIndexService()
+                                        .hasIndex(book),
+                                    builder: (context, snapshot) {
+                                      final indexed = snapshot.data == true ||
+                                          queueItem?.status ==
+                                              BookKnowledgeQueueStatus
+                                                  .completed;
+                                      return Stack(
+                                        children: [
+                                          if (indexed || queueItem != null)
+                                            Positioned(
+                                              left: 8,
+                                              top: 8,
+                                              child: KnowledgeStatusBadge(
+                                                indexed: indexed,
+                                                item: queueItem,
                                               ),
-                                              child: const Padding(
-                                                padding: EdgeInsets.all(5),
-                                                child: Icon(
-                                                  Icons.more_vert,
-                                                  color: Colors.white,
-                                                  size: 18,
+                                            ),
+                                          if (selectionMode)
+                                            Positioned(
+                                              right: 7,
+                                              top: 7,
+                                              child: _SelectionIndicator(
+                                                selected: selected,
+                                              ),
+                                            ),
+                                          if (selectionMode)
+                                            Positioned(
+                                              right: 6,
+                                              bottom: 6,
+                                              child: BookBottomSheet(
+                                                book: book,
+                                                menuOnly: true,
+                                                menuKey: menuKey,
+                                                child: DecoratedBox(
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black
+                                                        .withAlpha(150),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Padding(
+                                                    padding: EdgeInsets.all(15),
+                                                    child: Icon(
+                                                      Icons.more_vert,
+                                                      color: Colors.white,
+                                                      size: 18,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                        ),
-                                      if (queueItem?.status.isActive == true)
-                                        Positioned(
-                                          left: 0,
-                                          right: 0,
-                                          bottom: 0,
-                                          child: EinkStaticIndicator(
-                                              child: LinearProgressIndicator(
-                                            value: queueItem?.progress,
-                                            minHeight: 4,
-                                          )),
-                                        ),
-                                    ],
-                                  );
-                                },
+                                          if (queueItem?.status.isActive ==
+                                              true)
+                                            Positioned(
+                                              left: 0,
+                                              right: 0,
+                                              bottom: 0,
+                                              child: EinkStaticIndicator(
+                                                  child:
+                                                      LinearProgressIndicator(
+                                                value: queueItem?.progress,
+                                                minHeight: 4,
+                                              )),
+                                            ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
+                            ),
+                          )),
                     ),
-                    const SizedBox(height: 5),
-                    SizedBox(
-                      height: 55,
-                      child: Column(
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  book.title,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                              if (Prefs().webdavStatus)
-                                SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: BookSyncStatusIcon(
-                                    syncStatus: bookSyncStatus,
-                                  ),
-                                ),
-                              if (pinned) const Icon(Icons.push_pin, size: 16),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  book.author,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w300,
-                                    fontSize: 9,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                '${(book.readingPercentage * 100).toStringAsFixed(0)}%',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w300,
-                                  fontSize: 9,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                    BookshelfCaption(
+                      title: book.title,
+                      subtitle: book.author,
+                      progress: book.readingPercentage,
+                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                        if (Prefs().webdavStatus)
+                          SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: BookSyncStatusIcon(
+                                  syncStatus: bookSyncStatus)),
+                        if (pinned)
+                          const Icon(Icons.push_pin_outlined, size: 16),
+                      ]),
                     ),
                   ],
                 ),
@@ -369,7 +338,7 @@ class KnowledgeStatusBadge extends StatelessWidget {
         String text(String zh, String en) => ModuStrings.text(context, zh, en);
         final indexedLabel =
             indexed ? text('已索引', 'Indexed') : text('未索引', 'Not indexed');
-        final (label, color) = switch (status) {
+        final (label, _) = switch (status) {
           BookKnowledgeQueueStatus.queued => (
               text('排队中', 'Queued'),
               Colors.orange.shade700
@@ -407,7 +376,11 @@ class KnowledgeStatusBadge extends StatelessWidget {
 
         return DecoratedBox(
           decoration: BoxDecoration(
-            color: Prefs().eInkMode ? Colors.black : color,
+            color: Prefs().eInkMode
+                ? Colors.black
+                : status == BookKnowledgeQueueStatus.failed
+                    ? Theme.of(context).colorScheme.errorContainer
+                    : Theme.of(context).colorScheme.surfaceContainer,
             borderRadius: BorderRadius.circular(6),
             border: Prefs().eInkMode ? Border.all(color: Colors.black) : null,
           ),
@@ -415,10 +388,14 @@ class KnowledgeStatusBadge extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             child: Text(
               label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                height: 1.1,
+              style: TextStyle(
+                color: Prefs().eInkMode
+                    ? Colors.white
+                    : status == BookKnowledgeQueueStatus.failed
+                        ? Theme.of(context).colorScheme.onErrorContainer
+                        : Theme.of(context).colorScheme.onSurface,
+                fontSize: 12,
+                height: 1.2,
                 fontWeight: FontWeight.w600,
               ),
             ),

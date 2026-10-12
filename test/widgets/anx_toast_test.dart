@@ -39,7 +39,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
   for (final eink in [false, true]) {
-    testWidgets('ordinary messages use floating capsule theme; eink=$eink',
+    testWidgets('ordinary messages use floating app surface theme; eink=$eink',
         (tester) async {
       SharedPreferences.setMockInitialValues({});
       await Prefs().initPrefs();
@@ -51,7 +51,7 @@ void main() {
         return Theme(data: theme, child: const Scaffold(body: Text('theme')));
       })));
       expect(theme.snackBarTheme.behavior, SnackBarBehavior.floating);
-      expect(theme.snackBarTheme.shape, isA<StadiumBorder>());
+      expect(theme.snackBarTheme.shape, isA<RoundedRectangleBorder>());
       expect(theme.snackBarTheme.contentTextStyle?.color,
           theme.colorScheme.onSurface);
       if (eink) expect(theme.snackBarTheme.backgroundColor, Colors.white);

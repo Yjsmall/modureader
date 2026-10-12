@@ -168,7 +168,13 @@ void main() {
       expect(tester.getTopLeft(find.text('Scanned')).dy,
           lessThan(tester.getTopLeft(find.text('EPUB')).dy));
       final label = tester.widget<Text>(find.text('EPUB'));
-      expect(label.style!.color, eink ? Colors.black : Colors.white);
+      expect(
+          label.style!.color,
+          eink
+              ? Colors.black
+              : Theme.of(tester.element(find.text('EPUB')))
+                  .colorScheme
+                  .onSurface);
     }
     await tester.runAsync(
         () => DocumentReadingModeStore(Prefs().prefs).setScanned(value, false));

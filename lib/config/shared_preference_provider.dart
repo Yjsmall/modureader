@@ -1,3 +1,4 @@
+import 'package:anx_reader/theme/app_theme.dart';
 import 'dart:convert';
 import 'package:anx_reader/models/reader_shortcuts.dart';
 import 'package:anx_reader/models/tts_buffer_settings.dart';
@@ -298,7 +299,8 @@ class Prefs extends ChangeNotifier {
   }
 
   Color get themeColor {
-    int colorValue = prefs.getInt('themeColor') ?? Colors.blue.toARGB32();
+    int colorValue =
+        prefs.getInt('themeColor') ?? AppTheme.defaultSeed.toARGB32();
     return Color(colorValue);
   }
 
@@ -1620,7 +1622,7 @@ class Prefs extends ChangeNotifier {
   }
 
   double get bookCoverWidth {
-    return prefs.getDouble('bookCoverWidth') ?? 120;
+    return prefs.getDouble('bookCoverWidth') ?? 144;
   }
 
   bool get bookshelfListMode => prefs.getBool('bookshelfListMode') ?? false;

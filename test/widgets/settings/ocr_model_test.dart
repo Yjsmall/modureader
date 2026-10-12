@@ -126,6 +126,7 @@ void main() {
       final download =
           find.byKey(const ValueKey('ocr-download-ppocr-v5-mobile-1'));
       await tester.ensureVisible(download);
+      await tester.pumpAndSettle();
       await tester.tap(download);
       await tester.pumpAndSettle();
       expect(stores[1].downloads, 1);
@@ -146,6 +147,7 @@ void main() {
         (model) => model.id == store.model.id ? store : FakeOcrStore(model));
     final download = find.byKey(ValueKey('ocr-download-${store.model.id}'));
     await tester.ensureVisible(download);
+    await tester.pumpAndSettle();
     await tester.tap(download);
     await tester.pump();
     expect(store.token?.isCancelled, isFalse);
@@ -180,6 +182,7 @@ void main() {
     final id = Prefs().ocrModelId, selected = stores[Prefs().ocrModelId]!;
     final button = find.byKey(ValueKey('ocr-delete-$id'));
     await tester.ensureVisible(button);
+    await tester.pumpAndSettle();
     await tester.tap(button);
     await tester.pumpAndSettle();
     await tester.tap(find.text('取消').last);
@@ -197,6 +200,7 @@ void main() {
     expect(download, findsOneWidget);
     expect(button, findsNothing);
     await tester.ensureVisible(download);
+    await tester.pumpAndSettle();
     await tester.tap(download);
     await tester.pumpAndSettle();
     expect(selected.ready, isTrue);
@@ -214,6 +218,7 @@ void main() {
     final model = OcrModels.all[1], store = stores[OcrModels.all[1].id]!;
     final use = find.byKey(ValueKey('ocr-use-${model.id}'));
     await tester.ensureVisible(use);
+    await tester.pumpAndSettle();
     await tester.tap(use);
     await tester.pumpAndSettle();
     expect(Prefs().ocrModelId, model.id);
@@ -238,10 +243,12 @@ void main() {
     final selected = Prefs().ocrModelId,
         download = find.byKey(ValueKey('ocr-download-${store.model.id}'));
     await tester.ensureVisible(download);
+    await tester.pumpAndSettle();
     await tester.tap(download);
     await tester.pump();
     final cancel = find.byKey(ValueKey('ocr-cancel-${store.model.id}'));
     await tester.ensureVisible(cancel);
+    await tester.pumpAndSettle();
     await tester.tap(cancel);
     await tester.pumpAndSettle();
     expect(store.token!.isCancelled, isTrue);
@@ -249,6 +256,7 @@ void main() {
     store.pending = null;
     store.failDownload = true;
     await tester.ensureVisible(download);
+    await tester.pumpAndSettle();
     await tester.tap(download);
     await tester.pumpAndSettle();
     expect(find.textContaining('下载或校验失败'), findsOneWidget);

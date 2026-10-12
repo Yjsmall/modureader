@@ -605,8 +605,9 @@ class AiChatStreamState extends ConsumerState<AiChatStream> {
   Widget _buildHistoryTile(BuildContext context, AiChatHistoryEntry entry) {
     final allProviders = ref.watch(aiProvidersProvider);
     final provider = _providerById(allProviders, entry.serviceId);
-    final statusColor =
-        entry.completed ? Colors.green : Theme.of(context).colorScheme.tertiary;
+    final statusColor = entry.completed
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.tertiary;
     final title = _deriveTitle(entry);
     final subtitle = _buildHistorySubtitle(provider, entry);
 
@@ -1638,17 +1639,12 @@ class AiChatStreamState extends ConsumerState<AiChatStream> {
           const SizedBox(width: 8),
           Flexible(
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isUser
                     ? Theme.of(context).colorScheme.surfaceContainer
                     : Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.only(
-                  topLeft: isUser ? const Radius.circular(12) : Radius.zero,
-                  topRight: isUser ? Radius.zero : const Radius.circular(12),
-                  bottomLeft: isUser ? Radius.zero : const Radius.circular(12),
-                  bottomRight: isUser ? const Radius.circular(12) : Radius.zero,
-                ),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
