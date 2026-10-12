@@ -260,20 +260,7 @@ webdavInfo s3Info syncProtocol remoteLibraryConnection remoteLibraryViewOptions 
         });
         break;
       case 'tts':
-        final tts = TtsConfigTransfer.validate(data);
-        raw.addAll({
-          'ttsService': tts['service'],
-          'ttsVolume': tts['volume'],
-          'ttsPitch': tts['pitch'],
-          'ttsRate': tts['rate'],
-          'ttsBufferSettings': jsonEncode(tts['buffer']),
-          'allowMixWithOtherAudio': tts['allowMixWithOtherAudio']
-        });
-        for (final id in TtsConfigTransfer.services) {
-          raw['onlineTtsConfig_$id'] =
-              jsonEncode(tts['providers'][id]['config']);
-          raw['ttsVoiceModel_$id'] = tts['providers'][id]['voice'];
-        }
+        raw.addAll(TtsConfigTransfer.preferenceValues(data));
         break;
       case 'webdav':
         final dav = WebdavConfigTransfer.parse(data);

@@ -12,6 +12,7 @@ const load = async name => import(`data:text/javascript;base64,${Buffer.from(
   await readFile(new URL(`../assets/foliate-js/src/${name}.js`, import.meta.url), 'utf8')).toString('base64')}`);
 const { wordBounds, smartSelectionRange, installSmartSelection, isInitialSmartSelection } = await load('smart-selection');
 const { installSettledSelection } = await load('settled-selection');
+const { rangeSentence } = await load('sentence-context');
 
 function fixture(html = '<p>我喜欢中国文化。</p>', options = {}) {
   const dom = new JSDOM(`<body>${html}</body>`);
@@ -609,7 +610,7 @@ test('Apple native handle changes refresh text, CFI and annotations without poin
       getSelectionAnnotationIds: cfi => cfi.includes(':3:4:') ? [42] : [],
     };
     const setup = runInNewContext(`${publish}\n${handler}\nsetSelectionHandler;`, {
-      ...maps, navigator, style: {}, installSmartSelection,
+      ...maps, navigator, style: {}, installSmartSelection, rangeSentence,
       installSettledSelection: (doc, options) => installSettledSelection(doc, { ...options, delay: 5 }),
       getSelectionRange: sel => sel?.rangeCount && !sel.isCollapsed ? sel.getRangeAt(0) : null,
       getPosition: range => ({ left: range.startOffset, right: range.endOffset }),
@@ -634,6 +635,7 @@ test('Apple native handle changes refresh text, CFI and annotations without poin
       }
       f.select(3, 5); f.send('pointerup'); await settle();
       assert.equal(emitted.at(-1).text, '中国');
+      assert.equal(emitted.at(-1).sentenceText, '我喜欢中国文化。');
       const firstCFI = emitted.at(-1).cfi;
       // System handle movement sends only selectionchange; intermediate
       // ranges must not leave the toolbar with the old single-word payload.
@@ -881,11 +883,8 @@ test('reader integration resolves settings live and guards automatic cross-page 
   assert.match(book, /smartSelectionDocuments\.get\(doc\)\?\.cancel\(\{ preserveActiveSelection: detail\.reason === 'scroll' \}\)/);
   assert.match(book, /window\.onNativeReaderLongPress =/);
   assert.match(book, /smartSelectionDocuments\.get\(doc\)\?\.nativeLongPress\?\.\(\)/);
-  for (const name of ['lib/utils/webView/webview_initial_variable.dart', 'lib/page/book_player/epub_player.dart']) {
-    const dart = await readFile(new URL(`../${name}`, import.meta.url), 'utf8');
-    assert.match(dart, /longPressSelectParagraph: \$\{Prefs\(\)\.longPressSelectParagraph\}/);
-    assert.match(dart, /selectionLocale: \$\{jsonEncode\(Prefs\(\)\.effectiveLocale\.toLanguageTag\(\)\)\}/);
-    if (name.endsWith('epub_player.dart'))
-      assert.match(dart, /onCreateContextMenu:[\s\S]*window\.onNativeReaderLongPress\?\.\(\)/);
-  }
+  const dart = await readFile(new URL('../lib/page/book_player/epub_player.dart', import.meta.url), 'utf8');
+  assert.match(dart, /longPressSelectParagraph: \$\{Prefs\(\)\.longPressSelectParagraph\}/);
+  assert.match(dart, /selectionLocale: \$\{jsonEncode\(Prefs\(\)\.effectiveLocale\.toLanguageTag\(\)\)\}/);
+  assert.match(dart, /onCreateContextMenu:[\s\S]*window\.onNativeReaderLongPress\?\.\(\)/);
 });

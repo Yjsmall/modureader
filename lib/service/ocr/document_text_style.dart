@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'package:anx_reader/service/local_data/json_preference_store.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -52,43 +52,16 @@ class DocumentTextStyle {
 }
 
 class DocumentTextStyleStore {
-  DocumentTextStyleStore(this.prefs);
+  DocumentTextStyleStore(this.prefs) : _store = JsonPreferenceStore(prefs, key);
   final SharedPreferences prefs;
+  final JsonPreferenceStore _store;
   static const key = 'documentTextStyles';
-  static Future<void> _writes = Future.value();
-  Map<String, dynamic> _read() {
-    try {
-      final v = jsonDecode(prefs.getString(key) ?? '{}');
-      return v is Map ? Map<String, dynamic>.from(v) : {};
-    } catch (_) {
-      return {};
-    }
-  }
 
   DocumentTextStyle read(String book) =>
-      DocumentTextStyle.fromJson(_read()[book]);
+      DocumentTextStyle.fromJson(_store.read()[book]);
   Future<void> save(String book, DocumentTextStyle style) {
     if (book.isEmpty) throw ArgumentError('Missing book identity');
-    final operation = _writes.then((_) async {
-      final previous = prefs.getString(key);
-      try {
-        if (!await prefs.setString(
-            key, jsonEncode({..._read(), book: style.toJson()}))) {
-          throw StateError('Could not save OCR style');
-        }
-      } catch (_) {
-        // SharedPreferences updates its in-memory cache before platform I/O.
-        try {
-          if (previous == null) {
-            await prefs.remove(key);
-          } else {
-            await prefs.setString(key, previous);
-          }
-        } catch (_) {}
-        rethrow;
-      }
-    });
-    _writes = operation.catchError((_) {});
-    return operation;
+    return _store.update((values) => values[book] = style.toJson(),
+        failureMessage: 'Could not save OCR style', recoverMalformed: true);
   }
 }

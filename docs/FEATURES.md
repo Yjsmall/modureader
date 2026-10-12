@@ -166,7 +166,7 @@ Source: [settings](../lib/page/settings_page/narrate.dart), [services](../lib/se
 
 The home Reading History page records time, active dates, progress and notes with heatmaps/trends/streaks and configurable cards. Recent reading, weekly review, daily average and most annotated books are available; daily average counts only recorded reading days. Tap available book titles/covers to reopen. Deleted books show a notice without removing history. Activity in other apps is not measured.
 
-Source: [cards/defaults](../lib/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart), [book links](../lib/widgets/statistic/reading_history_book_link.dart), [recording](../lib/service/statistic.dart).
+Source: [cards/defaults](../lib/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart), [book links](../lib/widgets/statistic/reading_history_book_link.dart), [recording](../lib/dao/reading_time.dart).
 
 ## 11. WebDAV and object-storage sync
 

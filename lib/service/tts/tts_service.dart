@@ -40,12 +40,8 @@ enum TtsService {
 
 /// Get TTS service from service ID string.
 TtsService getTtsService(String serviceId) {
-  try {
-    return TtsService.values
-        .firstWhere((e) => e.toString().split('.').last == serviceId);
-  } catch (e) {
-    return TtsService.system;
-  }
+  return TtsService.values.firstWhere((service) => service.name == serviceId,
+      orElse: () => TtsService.system);
 }
 
 /// System TTS provider (placeholder for service provider pattern).

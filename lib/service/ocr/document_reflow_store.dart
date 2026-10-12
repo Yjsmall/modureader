@@ -40,11 +40,14 @@ class DocumentReflowAnchor {
 }
 
 class DocumentReflowPage {
-  DocumentReflowPage(
-      {required this.page, required this.ocr, required this.rawText})
-      : text = reflowDocumentText(rawText),
-        revision =
-            sha256.convert(utf8.encode(reflowDocumentText(rawText))).toString();
+  factory DocumentReflowPage(
+      {required int page, required bool ocr, required String rawText}) {
+    final text = reflowDocumentText(rawText);
+    return DocumentReflowPage._(
+        page, ocr, rawText, text, sha256.convert(utf8.encode(text)).toString());
+  }
+  const DocumentReflowPage._(
+      this.page, this.ocr, this.rawText, this.text, this.revision);
   final int page;
   final bool ocr;
   final String rawText, text, revision;

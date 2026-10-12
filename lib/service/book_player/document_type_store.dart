@@ -1,67 +1,46 @@
-import 'dart:convert';
+import 'package:anx_reader/service/local_data/json_preference_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Local per-document correction, separate from transferable global settings.
 class DocumentTypeStore {
-  DocumentTypeStore(this.prefs);
+  DocumentTypeStore(this.prefs)
+      : _store = JsonPreferenceStore(prefs, key),
+        _detectedStore = JsonPreferenceStore(prefs, detectedKey);
   final SharedPreferences prefs;
+  final JsonPreferenceStore _store;
+  final JsonPreferenceStore _detectedStore;
   static const key = 'documentTypeOverrides';
   static const types = {'text', 'scanned', 'image-with-text', 'mixed'};
 
-  Map<String, String> _read() {
-    try {
-      final value = jsonDecode(prefs.getString(key) ?? '{}');
-      if (value is! Map) return {};
-      return {
-        for (final entry in value.entries)
-          if (entry.key is String &&
-              entry.value is String &&
-              types.contains(entry.value))
-            entry.key as String: entry.value as String
-      };
-    } catch (_) {
-      return {};
-    }
-  }
+  String? _validType(Object? value) =>
+      value is String && types.contains(value) ? value : null;
 
-  String? read(String documentKey) => _read()[documentKey];
+  String? read(String documentKey) => _validType(_store.read()[documentKey]);
 
   static const detectedKey = 'documentDetectedTypes';
-  String? readDetected(String documentKey) {
-    try {
-      final entries = jsonDecode(prefs.getString(detectedKey) ?? '{}');
-      final kind = entries is Map ? entries[documentKey] : null;
-      return kind is String && types.contains(kind) ? kind : null;
-    } catch (_) {
-      return null;
-    }
-  }
+  String? readDetected(String documentKey) =>
+      _validType(_detectedStore.read()[documentKey]);
 
   Future<void> saveDetected(String documentKey, String kind) async {
     if (!types.contains(kind) || documentKey.isEmpty) return;
-    Map<String, dynamic> entries;
-    try {
-      entries = Map<String, dynamic>.from(
-          jsonDecode(prefs.getString(detectedKey) ?? '{}'));
-    } catch (_) {
-      entries = {};
-    }
-    entries[documentKey] = kind;
-    await prefs.setString(detectedKey, jsonEncode(entries));
+    await _detectedStore.update((entries) => entries[documentKey] = kind,
+        failureMessage: 'Could not save detected document type',
+        recoverMalformed: true);
   }
 
   Future<void> save(String documentKey, String? kind) async {
     if (documentKey.isEmpty || (kind != null && !types.contains(kind))) {
       throw ArgumentError('Invalid document type correction');
     }
-    final values = _read();
-    if (kind == null) {
-      values.remove(documentKey);
-    } else {
-      values[documentKey] = kind;
-    }
-    if (!await prefs.setString(key, jsonEncode(values))) {
-      throw StateError('Could not save document type correction');
-    }
+    await _store.update((values) {
+      values.removeWhere((_, value) => _validType(value) == null);
+      if (kind == null) {
+        values.remove(documentKey);
+      } else {
+        values[documentKey] = kind;
+      }
+    },
+        failureMessage: 'Could not save document type correction',
+        recoverMalformed: true);
   }
 }

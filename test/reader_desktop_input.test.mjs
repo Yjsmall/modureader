@@ -152,11 +152,8 @@ test('runtime wires mobile keyboard and desktop-only mouse input for every chapt
   assert.match(dart,/desktopPageInput: \$\{AnxPlatform\.isDesktop\}/);
   const initial=await readFile(new URL('../lib/utils/webView/gererate_url.dart',import.meta.url),'utf8');
   assert.match(initial,/'desktopPageInput': AnxPlatform\.isDesktop/);
-  const legacy=await readFile(new URL('../lib/utils/webView/webview_initial_variable.dart',import.meta.url),'utf8');
-  assert.match(legacy,/desktopPageInput: \$\{AnxPlatform\.isDesktop\}/);
   assert.match(initial,/'keyboardShortcutTurnPage': Prefs\(\)\.keyboardShortcutTurnPage/);
   assert.match(dart,/keyboardShortcutTurnPage: \$\{Prefs\(\)\.keyboardShortcutTurnPage\}/);
-  assert.match(legacy,/keyboardShortcutTurnPage: \$\{Prefs\(\)\.keyboardShortcutTurnPage\}/);
   assert.match(book,/ctrlBrackets: \(\) => style\.keyboardShortcutTurnPage === true/);
   const page=await readFile(new URL('../lib/page/reading_page.dart',import.meta.url),'utf8');
   assert.match(page,/readerOwnsPageKeys\(_readerFocusNode, _readerWebViewFocusScope/);

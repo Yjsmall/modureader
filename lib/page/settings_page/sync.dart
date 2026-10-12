@@ -775,8 +775,6 @@ Future<String> createZipFile(Map<String, dynamic> params) async {
     getFontDir(path: docPath),
     getBgimgDir(path: docPath),
     Directory(path.join(docPath, 'ai')),
-    // await getAnxSharedPrefsDir(),
-    // await getAnxShredPrefsFile(),
     prefsBackupFile,
   ];
 

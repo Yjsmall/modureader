@@ -128,3 +128,4 @@ google_service_account.json
 
 # Private device reference captures may contain book text; keep them local.
 /docs/references/hanvon-pdf/
+.agents/

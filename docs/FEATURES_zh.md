@@ -187,7 +187,7 @@ OpenAI 兼容和 MiMo 的风格设置可编辑自然叙述、睡前轻读、小�
 
 点击仍存在的书名 / 封面继续开书；删除的书籍提示不可打开，历史不因此删除。历史数据来自应用记录，不表示其他软件或离开阅读器期间的阅读活动。
 
-源码：[卡片及默认布局](../lib/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart)、[历史入口](../lib/widgets/statistic/reading_history_book_link.dart)、[阅读统计](../lib/service/statistic.dart)。
+源码：[卡片及默认布局](../lib/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart)、[历史入口](../lib/widgets/statistic/reading_history_book_link.dart)、[阅读统计](../lib/dao/reading_time.dart)。
 
 ## 11. WebDAV / 对象存储同步
 

@@ -1,32 +1,25 @@
-import 'dart:convert';
 import 'package:anx_reader/models/pdf_reading_view.dart';
+import 'package:anx_reader/service/local_data/json_preference_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Device-local region positions supplement (never replace) the original CFI.
 class PdfReadingStateStore {
-  PdfReadingStateStore(this.prefs);
+  PdfReadingStateStore(this.prefs) : _store = JsonPreferenceStore(prefs, key);
   final SharedPreferences prefs;
+  final JsonPreferenceStore _store;
   static const key = 'pdfReadingStates';
-  static Future<void> _writes = Future.value();
 
   bool hasSavedMode(String bookKey) {
-    try {
-      final value = jsonDecode(prefs.getString(key) ?? '{}')[bookKey];
-      return value is Map && value['enabled'] is bool;
-    } catch (_) {
-      return false;
-    }
+    final value = _store.read()[bookKey];
+    return value is Map && value['enabled'] is bool;
   }
 
-  Map<String, dynamic> read(String bookKey) {
-    try {
-      final value = jsonDecode(prefs.getString(key) ?? '{}')[bookKey];
-      if (value is Map && value['enabled'] is bool) {
-        return Map<String, dynamic>.from(value);
-      }
-    } catch (_) {}
-    return {'enabled': false};
-  }
+  Map<String, dynamic> _state(Object? value) =>
+      value is Map<String, dynamic> && value['enabled'] is bool
+          ? Map<String, dynamic>.from(value)
+          : {'enabled': false};
+
+  Map<String, dynamic> read(String bookKey) => _state(_store.read()[bookKey]);
 
   Future<void> setEnabled(String bookKey, bool enabled) =>
       _update(bookKey, {'enabled': enabled, 'position': null, 'cfi': null});
@@ -85,28 +78,8 @@ class PdfReadingStateStore {
 
   Future<void> _update(String bookKey, Map<String, dynamic> patch) {
     if (bookKey.isEmpty) throw ArgumentError('Empty document identity');
-    final operation = _writes.then((_) async {
-      final previous = prefs.getString(key);
-      final decoded = jsonDecode(previous ?? '{}');
-      if (decoded is! Map) throw const FormatException('Invalid PDF states');
-      final all = Map<String, dynamic>.from(decoded);
-      all[bookKey] = {...read(bookKey), ...patch};
-      try {
-        if (!await prefs.setString(key, jsonEncode(all))) {
-          throw StateError('PDF reading position save failed');
-        }
-      } catch (_) {
-        try {
-          if (previous == null) {
-            await prefs.remove(key);
-          } else {
-            await prefs.setString(key, previous);
-          }
-        } catch (_) {}
-        rethrow;
-      }
-    });
-    _writes = operation.catchError((_) {});
-    return operation;
+    return _store.update((all) {
+      all[bookKey] = {..._state(all[bookKey]), ...patch};
+    }, failureMessage: 'PDF reading position save failed');
   }
 }

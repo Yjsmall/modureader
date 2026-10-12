@@ -108,11 +108,10 @@ class TtsConfigTransfer {
     };
   }
 
-  /// Validate the entire snapshot before any writes. Never clear unrelated prefs.
-  /// The caller stops the player before applying and refreshes it afterwards.
-  static Future<void> apply(Prefs prefs, Map<String, dynamic> data) async {
+  /// Shared mapping for direct imports and legacy global-settings migration.
+  static Map<String, Object> preferenceValues(Map<String, dynamic> data) {
     final valid = validate(data);
-    final values = <String, Object>{
+    return <String, Object>{
       'ttsService': valid['service'],
       'ttsVolume': valid['volume'],
       'ttsPitch': valid['pitch'],
@@ -124,6 +123,12 @@ class TtsConfigTransfer {
       for (final id in services)
         'ttsVoiceModel_$id': valid['providers'][id]['voice'],
     };
+  }
+
+  /// Validate the entire snapshot before any writes. Never clear unrelated prefs.
+  /// The caller stops the player before applying and refreshes it afterwards.
+  static Future<void> apply(Prefs prefs, Map<String, dynamic> data) async {
+    final values = preferenceValues(data);
     final previous = {for (final key in values.keys) key: prefs.prefs.get(key)};
     Future<bool> write(String key, Object? value) => switch (value) {
           String v => prefs.prefs.setString(key, v),

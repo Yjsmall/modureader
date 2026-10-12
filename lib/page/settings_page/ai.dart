@@ -81,18 +81,6 @@ class _AISettingsState extends ConsumerState<AISettings> {
           ),
           CustomSettingsTile(
               child: _AiRpmTile(setState: () => setState(() {}))),
-          // SettingsTile.navigation(
-          //   leading: const Icon(Icons.chat),
-          //   title: Text(L10n.of(context).aiChat),
-          //   onPressed: (context) {
-          //     Navigator.push(
-          //       context,
-          //       MotionCupertinoPageRoute(
-          //         builder: (context) => const AiChatPage(),
-          //       ),
-          //     );
-          //   },
-          // ),
         ],
       ),
       SettingsSection(

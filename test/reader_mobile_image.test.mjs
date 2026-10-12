@@ -45,9 +45,10 @@ test('small inline icons do not inflate to their intrinsic dimensions', () => {
   assert.equal(img.style.width, '16px'); assert.equal(img.style.height, '24px');
 });
 test('source wiring gates initial and updated layout by host platform, not window width', async () => {
-  for (const name of ['../lib/utils/webView/webview_initial_variable.dart', '../lib/page/book_player/epub_player.dart']) {
-    assert.match(await readFile(new URL(name, import.meta.url), 'utf8'), /mobileImageFit: \$\{AnxPlatform.isMobile\}/);
-  }
+  const dart = await readFile(new URL('../lib/page/book_player/epub_player.dart', import.meta.url), 'utf8');
+  assert.match(dart, /mobileImageFit: \$\{AnxPlatform.isMobile\}/);
+  const initial = await readFile(new URL('../lib/utils/webView/gererate_url.dart', import.meta.url), 'utf8');
+  assert.match(initial, /'mobileImageFit': AnxPlatform.isMobile/);
   const paginator = await readFile(new URL('../assets/foliate-js/src/paginator.js', import.meta.url), 'utf8');
   assert.match(paginator, /if \(this\.#layout\.mobileImageFit\) \{\s+fitMobileImages/);
   assert.match(paginator, /doc.addEventListener\('load', refit, true\)/);

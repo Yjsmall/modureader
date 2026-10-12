@@ -2,118 +2,55 @@ import 'package:anx_reader/l10n/generated/L10n.dart';
 import 'package:anx_reader/enums/sync_protocol.dart';
 import 'package:anx_reader/main.dart';
 import 'package:anx_reader/service/sync/sync_client_factory.dart';
+import 'package:anx_reader/service/sync/sync_client_base.dart';
 import 'package:anx_reader/utils/log/common.dart';
 import 'package:anx_reader/service/sync/sync_feedback.dart';
 import 'package:flutter/widgets.dart';
 
 /// Utility class for testing sync connections
 class SyncConnectionTester {
-  /// Test connection result (simple ping test)
+  /// Test reachability without creating remote files.
   static Future<SyncTestResult> testConnection({
     required SyncProtocol protocol,
     required Map<String, dynamic> config,
-  }) async {
-    try {
-      // Create client with temporary configuration
-      final client = SyncClientFactory.createClient(protocol, config);
+  }) =>
+      _test(protocol, config, (client) => client.ping(), 'connection');
 
-      // Verify if configuration is complete
-      if (!client.isConfigured) {
-        return SyncTestResult.failure(L10n.of(navigatorKey.currentContext!)
-            .configurationInformationIsIncomplete);
-      }
-
-      // Execute ping test
-      await client.ping();
-
-      AnxLog.info('${protocol.displayName} connection test successful');
-      return SyncTestResult.success(
-          L10n.of(navigatorKey.currentContext!).connectionSuccessful);
-    } catch (e) {
-      final errorMessage = syncFailureMessage(e,
-          chinese: navigatorKey.currentContext == null ||
-              Localizations.localeOf(navigatorKey.currentContext!)
-                      .languageCode ==
-                  'zh');
-      AnxLog.severe(
-          '${protocol.displayName} connection test failed: $errorMessage');
-      return SyncTestResult.failure(errorMessage);
-    }
-  }
-
-  /// Test full connection with CRUD operations (create, upload, download, delete)
+  /// Test create, upload, download and delete capabilities.
   static Future<SyncTestResult> testFullConnection({
     required SyncProtocol protocol,
     required Map<String, dynamic> config,
-  }) async {
+  }) =>
+      _test(protocol, config, (client) => client.testFullCapabilities(),
+          'full connection');
+
+  static Future<SyncTestResult> _test(
+    SyncProtocol protocol,
+    Map<String, dynamic> config,
+    Future<void> Function(SyncClientBase) check,
+    String operation,
+  ) async {
+    // Resolve messages before awaiting network work; the initiating route may
+    // have disappeared by the time the request completes.
+    final context = navigatorKey.currentContext;
+    final l10n = context == null
+        ? await lookupL10n(const Locale('zh'))
+        : L10n.of(context);
     try {
-      // Create client with temporary configuration
       final client = SyncClientFactory.createClient(protocol, config);
-
-      // Verify if configuration is complete
       if (!client.isConfigured) {
-        return SyncTestResult.failure(L10n.of(navigatorKey.currentContext!)
-            .configurationInformationIsIncomplete);
+        return SyncTestResult.failure(
+            l10n.configurationInformationIsIncomplete);
       }
-
-      // Execute full capabilities test
-      await client.testFullCapabilities();
-
-      AnxLog.info('${protocol.displayName} full connection test successful');
-      return SyncTestResult.success(
-          L10n.of(navigatorKey.currentContext!).connectionSuccessful);
-    } catch (e) {
-      final errorMessage = syncFailureMessage(e,
-          chinese: navigatorKey.currentContext == null ||
-              Localizations.localeOf(navigatorKey.currentContext!)
-                      .languageCode ==
-                  'zh');
-      AnxLog.severe(
-          '${protocol.displayName} full connection test failed: $errorMessage');
-      return SyncTestResult.failure(errorMessage);
+      await check(client);
+      AnxLog.info('${protocol.displayName} $operation test successful');
+      return SyncTestResult.success(l10n.connectionSuccessful);
+    } catch (error) {
+      final message =
+          syncFailureMessage(error, chinese: l10n.localeName.startsWith('zh'));
+      AnxLog.severe('${protocol.displayName} $operation test failed: $message');
+      return SyncTestResult.failure(message);
     }
-  }
-
-  /// Get user-friendly error message
-  static String getErrorMessage(dynamic error) {
-    final errorStr = error.toString().toLowerCase();
-
-    final context = navigatorKey.currentContext!;
-
-    if (errorStr.contains('timeout') ||
-        errorStr.contains('connection timeout')) {
-      return L10n.of(context).connectionTimeout;
-    }
-
-    if (errorStr.contains('unauthorized') || errorStr.contains('401')) {
-      return L10n.of(context).testUnauthorized;
-    }
-
-    if (errorStr.contains('forbidden') || errorStr.contains('403')) {
-      return L10n.of(context).testForbidden;
-    }
-
-    if (errorStr.contains('not found') || errorStr.contains('404')) {
-      return L10n.of(context).testNotFound;
-    }
-
-    if (errorStr.contains('connection refused') ||
-        errorStr.contains('connection failed')) {
-      return L10n.of(context).testRefused;
-    }
-
-    if (errorStr.contains('certificate') ||
-        errorStr.contains('ssl') ||
-        errorStr.contains('tls')) {
-      return L10n.of(context).testSsl;
-    }
-
-    if (errorStr.contains('dns') || errorStr.contains('resolve')) {
-      return L10n.of(context).testDnd;
-    }
-
-    // Return original error message (but remove overly technical parts)
-    return L10n.of(context).testOther;
   }
 }
 
